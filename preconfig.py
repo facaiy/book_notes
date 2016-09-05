@@ -18,6 +18,7 @@
 #import logging
 #logger = logging.getLogger()
 
+#from IPython.display import SVG
 """
 def show_image(filename, figsize=None, res_dir=True):
     if figsize:
