@@ -1,0 +1,38 @@
+\documentclass[12pt,a4paper]{book}
+%% 使用ctex规定中文样式
+\usepackage{ctex}
+
+%% 使用xeCJK, 設定中英文的字型
+\usepackage{xeCJK}
+%% 设置缺省英文字体
+\setmainfont{Times New Roman}
+\setmonofont{Courier New}
+%% 设置缺省中文字体
+\setCJKmainfont[BoldFont=STXinwei]{DFKai-SB} %標楷體，华文新魏
+%\setCJKmainfont[BoldFont=SimHei]{SimSun} %宋体，黑体
+\setCJKmonofont{SimSun}
+
+\usepackage{amsmath} %公式
+
+\usepackage{graphicx} %处理图形
+\usepackage{subfig} %子图
+
+\usepackage{booktabs} %美化表格
+
+\renewcommand\figurename{图}
+\renewcommand\tablename{表}
+
+
+\begin{document}
+\frontmatter
+\input{tex/title}
+\maketitle
+
+\include{tex/intro}
+
+\mainmatter
+\include{tex/decision_tree}
+
+\backmatter
+\include{tex/ack}
+\end{document}
