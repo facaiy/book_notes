@@ -1,0 +1,23 @@
+% -*- coding: utf-8 -*-
+
+% 配置宏包和订制环境
+\include{tex/custom}
+
+% 文首
+\begin{document}
+
+% 封面
+\include{tex/id}
+\createtitle
+
+% 目录
+\createoutline
+
+% 正文
+\input{tex/content}
+
+% 封底
+\createlastpage
+
+\end{document}
+% 文末

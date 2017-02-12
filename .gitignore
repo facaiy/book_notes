@@ -70,3 +70,9 @@ target/
 *.gz
 *.aux
 *.pdf
+*.fdb_latexmk
+*.fls
+*.nav
+*.out
+*.snm
+*.toc
