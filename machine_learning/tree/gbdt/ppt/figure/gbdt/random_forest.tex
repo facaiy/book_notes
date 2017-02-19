@@ -1,0 +1,48 @@
+\begin{tikzpicture}
+    [place/.style={circle,scale=0.3,draw=green!50,fill=green!20,thick},
+    transition/.style={rectangle,draw=black!50,fill=black!20,thick}]
+
+    \draw[dashed,thin] (0,0) circle [x radius=1.5, y radius=1];
+    \draw[dashed,thin] (0,0) circle [x radius=2.5, y radius=2];
+
+    \node[place,label=above:{$y_0=F_0(X)$}] (f0) at (1.8,3.24)  {};
+    \node[place,label=north east:{$y_1$}] (f1) at (3.0,-0.3)  {};
+    \node[place,label=below:{$y_2$}] (f2) at (1.0,-1.0)   {};
+    \node[place] (f3) at (0.6,0.0)   {};
+    \node[circle,draw=blue,fill=blue,scale=0.4,label=below:{$y$},label=north east:{$y_n$}] (fn) at (0,0)  {};
+
+    \draw[->,>=stealth,dashed] (f0) -- (f1) node[midway,right] {$\tilde{y}_0$};
+    \draw[->,>=stealth,dashed] (f1) -- (f2);
+    \draw[->,>=stealth,dashed] (f2) -- (f3) node[midway,circle,draw=red,fill=red,scale=0.4] {};
+    \draw[->,>=stealth,dashed] (f3) -- (fn);
+
+    \draw[help lines] (6.2,-3.8) grid (9.8, -0.8);
+    \node[circle,scale=0.3,label=above:$X$,draw] (x) at (7.5,-2.5) {};
+    \node[scale=0.3,label=right:$\tilde{y}_0$] (hx) at (8.7,-6.04) {};
+
+    \draw[arrow,blue] (x) -- (f0)  node[midway,above] {$F_0$};
+    \draw[arrow] (x) --  (f1) node[midway,above] {$F_1$};
+    \draw[arrow] (x) -- (hx) node[midway,right] {$h(x; \mathbf{a})$};
+    \draw[->,>=stealth,dashed] (hx) -- (f1);
+
+    \draw (0,-3) node {GBDT};
+
+    %\draw[arrow,dashed] (x) -- ($ (x) !.95! (f2)$) node[midway,below] {$F_2$};
+
+    %\draw[arrow,blue] (x) -- (fn) node[near end,above] {$F_n$};
+    \draw[dashed,thin] (15,0) circle [x radius=1.5, y radius=1];
+    \draw[dashed,thin] (15,0) circle [x radius=2.5, y radius=2];
+
+    \node[place,label=above:{$s_0$}] (s0) at (15.8,1.2)  {};
+    \node[place,label=north east:{$s_1$}] (s1) at (16.0,-1.0)  {};
+    \node[place,label=below:{$s_2$}] (s2) at (15.0,-1.8)   {};
+    \node[circle,draw=blue,fill=blue,scale=0.4,label=below:{$y$}] (sn) at (15,0)  {};
+
+    \draw (15.8,-0.4) node[circle,draw=red,fill=red,scale=0.4] {};
+
+    \draw[arrow,blue] (x) -- (sn)  node[near end,below] {$f_0$};
+
+    \draw[->,>=stealth] (x) edge (s0) edge (s1) edge (s2);
+
+    \draw (15,-3) node {Random Forest};
+\end{tikzpicture}

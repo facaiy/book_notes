@@ -6,16 +6,63 @@
 \subsection{直观印象}
 % 模型叠加
 % 残差
+\begin{frame}
+    \begin{figure}[!tb]
+        \includegraphics[width=1.2\onepicwidth]{figure/gbdt/gbdt_attractive_picture}
+        \caption{GBDT示意\footnote{
+                 \href{http://arogozhnikov.github.io/2016/06/24/gradient_boosting_explained.html}{Gradient Boosting explained, Alex Rogozhnikov}}}
+    \end{figure}
+\end{frame}
 
 \subsection{算法流程}
 % https://en.wikipedia.org/wiki/Gradient_boosting
 %% greedy: pdf, Algorithm 1
+\begin{frame}
+    \begin{algorithm}[H]
+        $F_0(x) = \operatorname{arg \, min}_\rho \sum_{i=1}^N L(y_i, \rho)$ \;
+        \For{$m=1$ \KwTo $M$}{
+            $\tilde{y} = - \left [ \frac{\partial L (y_i, F(x_i))}{\partial F(x_i)} \right ]_{F(x) = F_{m-1}(x)}, \quad i = 1, 2, \dotsc, N$ \;
+            $\mathbf{a}_m = \operatorname{arg \, min}_{\mathbf{a}, \beta} \sum_{i=1}^N \left [ \tilde{y}_i - \beta h(x_i; \mathbf{a}) \right ]^2$ \;
+            $\rho_m = \operatorname{arg \, min}_\rho \sum_{i=1}^N L \left ( y_i, F_{m-1}(x_i) + \rho h(x_i; \mathbf{a}_m) \right)$ \;
+            $F_m(x) = F_{m-1}(x) + \rho_m h(x; \mathbf{a}_m)$ \;
+        }
+        \caption{Gradient\_Boost}
+    \end{algorithm}
+    {\tiny Greedy function approximation: A gradient boosting machine, Jerome H. Friedman}
+\end{frame}
 
 \subsection{从最优化角度的理解}
 % 从最速下降法来理解
 %% L(,) 距离函数
 %% 一维 U
 %% 二维 曲面
+\begin{frame}
+    \begin{figure}
+        \centering
+        \subfigure[][]{
+            \resizebox{0.53\linewidth}{!}{\input{figure/gbdt/gradient}}
+        }
+        \hfil
+        \subfigure[][]{
+            \resizebox{0.40\linewidth}{!}{\input{figure/gbdt/find_route}}
+        }
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \begin{figure}
+        \centering
+        \resizebox{1.1\onepicwidth}{!}{\input{figure/gbdt/space_map}}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \begin{figure}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figure/gbdt/random_forest}}
+    \end{figure}
+\end{frame}
+
 
 \subsection{从泛函角度的理解}
 % 泛函，不是数据在变，而是函数在变
@@ -25,6 +72,8 @@
 % 为什么选择决策树？
 % 数据，泰勒展开， 正交基底
 %% 加法模型 = 正交基底，函数空间
+\begin{frame}
+\end{frame}
 
 \subsection{从降维角度的理解}
 % PCA
@@ -33,3 +82,4 @@
 
 % 寻优耗时
 % spark,实现，没有寻优 => tree boost
+%% 用sklearn, spark代码引出Tree Boost
