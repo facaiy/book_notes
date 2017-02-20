@@ -11,11 +11,11 @@
     \node[place,label=above:{$y_0=F_0(X)$}] (f0) at (1.8,3.24)  {};
     \node[place,label=north east:{$y_1$}] (f1) at (3.0,-0.3)  {};
     \node[place,label=below:{$y_2$}] (f2) at (1.0,-1.0)   {};
-    \node[place] (f3) at (0.6,0.0)   {};
+    \node[circle,draw=red,fill=red,scale=0.3] (f3) at (0.6,0.0)   {};
     \node[place,label=below:{$y$},label=north east:{$y_n$}] (fn) at (0,0)  {};
 
-    \draw[->,>=stealth,dashed] (f0) -- (f1) node[midway,right] {$\tilde{y}_0$};
-    \draw[->,>=stealth,dashed] (f1) -- (f2) node[midway,above] {$\tilde{y}_1$};
+    \draw[->,>=stealth,dashed] (f0) -- (f1);
+    \draw[->,>=stealth,dashed] (f1) -- (f2);
     \draw[->,>=stealth,dashed] (f2) -- (f3);
     \draw[->,>=stealth,dashed] (f3) -- (fn);
 
@@ -25,15 +25,15 @@
     \node[scale=0.3] (hx2) at (5.5,-3.2) {};
 
     \draw[arrow] (x) -- (f0)  node[midway,above] {$F_0$};
-    \draw[arrow,blue] (x) --  (f1) node[midway,above] {$F_1$};
     \draw[arrow] (x) -- (hx1) node[below] {$h(x; \mathbf{a})$};
-    \draw[->,>=stealth,dashed] (hx1) -- (f1);
     \draw[arrow] (x) -- (hx2) node[left] {$h(x; \mathbf{a})$};
-    \draw[->,>=stealth,dashed] (x) --  (f2);
+
+    \draw[arrow,red] (x) -- (f3) node[midway,above] {$F$};
+    \draw[arrow,blue] (x) -- (fn) node[midway,below] {$F_n$};
 
     %\draw[arrow,dashed] (x) -- ($ (x) !.95! (f2)$) node[midway,below] {$F_2$};
 
     %\draw[arrow,blue] (x) -- (fn) node[near end,above] {$F_n$};
 
-    \draw (0,-6) node[scale=1.3] {$F_m(x) = F_{m-1}(x) + \rho_m h(x; \mathbf{a}_m)$};
+    \draw (0,-6) node[scale=1.3] {$F_n(x) = F_{0}(x) + \sum_n \rho_m h(x; \mathbf{a}_m)$};
 \end{tikzpicture}
