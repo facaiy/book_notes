@@ -123,7 +123,54 @@
 % PCA
 %% 数据特征的降维 -> 函数空间的降维
 %% 矩阵分解
+\begin{frame}
+    \begin{figure}
+        \centering
+        \subfigure[][]{
+            \includegraphics[width=0.40\linewidth]{figure/gbdt/PCA}
+        }
+        \hfil
+        \subfigure[][]{
+            \resizebox{0.50\linewidth}{!}{\input{figure/gbdt/basis}}
+        }
+        \caption{PCA\footnotemark 比较示意}
+    \end{figure}
+
+    \footnotetext{\href{https://lazyprogrammer.me/tutorial-principal-components-analysis-pca/}{Tutorial: Principal Components Analysis (PCA)}}
+\end{frame}
 
 % 寻优耗时
 % spark,实现，没有寻优 => tree boost
 %% 用sklearn, spark代码引出Tree Boost
+\begin{frame}[fragile]
+    \begin{lstlisting}[language=Scala,style=myScalastyle]
+def boost(
+  // +-- 46 lines: input: RDD[LabeledPoint],------------------------------
+  val firstTree = new DecisionTreeRegressor().setSeed(seed)
+  val firstTreeModel = firstTree.train(input, treeStrategy)
+  val firstTreeWeight = 1.0
+  baseLearners(0) = firstTreeModel
+  baseLearnerWeights(0) = firstTreeWeight
+  // +-- 17 lines: var predError: RDD[(Double, Double)] =-----------------
+  while (m < numIterations && !doneLearning) {
+    // Update data with pseudo-residuals
+    val data = predError.zip(input).map { case ((pred, _), point) =>
+    LabeledPoint(-loss.gradient(pred, point.label), point.features)
+    }
+    // +--  5 lines: timer.start(s"building tree $m")----------------------
+    val dt = new DecisionTreeRegressor().setSeed(seed + m)
+    val model = dt.train(data, treeStrategy)
+    baseLearners(m) = model
+    baseLearnerWeights(m) = learningRate
+
+    predError = updatePredictionError(
+    input, predError, baseLearnerWeights(m), baseLearners(m), loss)
+    // +-- 21 lines: predErrorCheckpointer.update(predError)---------------
+    m += 1
+  }
+}
+    \end{lstlisting}
+    {\tiny \tt
+    source: spark/ml/tree/impl/GradientBoostedTrees.scala \\[-2ex]
+    commit: 2eedc00b04ef8ca771ff64c4f834c25f835f5f44}
+\end{frame}

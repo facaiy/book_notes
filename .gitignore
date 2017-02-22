@@ -76,3 +76,4 @@ target/
 *.out
 *.snm
 *.toc
+*.vrb

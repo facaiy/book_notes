@@ -4,16 +4,36 @@
 % http://nbviewer.jupyter.org/github/facaiy/book_notes/blob/master/machine_learning/tree/gbdt/treeboost/intro.ipynb
 \subsection{直观印象}
 % 全局权重 -> 叶子权重
+\begin{frame}
+    \begin{align*}
+        \mathbf{a}_m &= \operatorname{arg \, min}_{\mathbf{a}, \beta} \textstyle \sum_{i=1}^N \left [ \tilde{y}_i - \beta h(x_i; \mathbf{a}) \right ]^2 \\
+        \rho_m &= \operatorname{arg \, min}_\rho \textstyle \sum_{i=1}^N L \left ( y_i, F_{m-1}(x_i) + \rho h(x_i; \mathbf{a}_m) \right)
+    \end{align*}
+
+    \begin{figure}
+        \centering
+        \resizebox{\onepicwidth}{!}{\input{figure/tree_boost/intro}}
+        \caption{Tree boost示意\footnote{
+                 \href{http://www.texample.net/tikz/examples/red-black-tree/}{Red-black tree, Madit}}}
+    \end{figure}
+\end{frame}
+
 
 \subsection{算法推导}
 % 对树建模，公式推导
 %% 叶子区域
+\begin{frame}
+    \begin{align*}
+        h(x; \{b_j, R_j\}_1^J) = \sum_{j=1}^J b_j \, \mathbf{1}(x \in R_j)
+    \end{align*}
+\end{frame}
 
 % 作用：
 %% 1. 加速，省略了对权重值的寻优
 %% 2. 叶子上权重，更细粒度
 
 %% 损失 + 树 -> 树 == 先验 + 数据 -> 后验
+
 
 \subsection{常见的损失函数}
 % LS_Boost
@@ -28,3 +48,34 @@
 %% Two_class logistic regression and classification
 
 % 罗列spark和sklearn支持的loss function
+
+\begin{frame}[fragile]
+    \begin{lstlisting}[language=Python,style=myScalastyle]
+    y_pred = self._decision_function(X)
+
+    def _fit_stage(self, i, X, y, y_pred, sample_weight, sample_mask,
+                   random_state, X_idx_sorted, X_csc=None, X_csr=None):
+        for k in range(loss.K):
+            if loss.is_multi_class:
+                y = np.array(original_y == k, dtype=np.float64)
+
+            residual = loss.negative_gradient(y, y_pred, k=k,
+                                              sample_weight=sample_weight)
+            tree = DecisionTreeRegressor(
+                criterion='friedman_mse',
+                splitter='best',
+                presort=self.presort)
+
+                tree.fit(X_csc, residual, sample_weight=sample_weight,
+                         check_input=False, X_idx_sorted=X_idx_sorted)
+            # update tree leaves
+                loss.update_terminal_regions(tree.tree_, X, y, residual, y_pred,
+                                             sample_weight, sample_mask,
+                                             self.learning_rate, k=k)
+            self.estimators_[i, k] = tree
+        return y_pred
+    \end{lstlisting}
+    {\tiny \tt
+    source: scikit-learn/sklearn/ensemble/gradient\_boosting.py \\[-2ex]
+    commit: d161bfaa1a42da75f4940464f7f1c524ef53484f}
+\end{frame}
