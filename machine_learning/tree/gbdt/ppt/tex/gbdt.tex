@@ -16,14 +16,6 @@
 
 
 \subsection{算法流程}
-\begin{frame}
-    \begin{figure}[!tb]
-        \includegraphics[width=\onepicwidth]{figure/gbdt/Gradient_Visual}
-        \caption{损失函数示意\footnote{
-                 \href{https://en.wikipedia.org/wiki/File:Gradient_Visual.svg}{Gradient Visual, Wikipedia}}}
-    \end{figure}
-\end{frame}
-
 % https://en.wikipedia.org/wiki/Gradient_boosting
 %% greedy: pdf, Algorithm 1
 \begin{frame}
@@ -42,6 +34,14 @@
 
 
 \subsection{从最优化角度的理解}
+\begin{frame}
+    \begin{figure}[!tb]
+        \includegraphics[width=\onepicwidth]{figure/gbdt/Gradient_Visual}
+        \caption{损失函数示意\footnote{
+                 \href{https://en.wikipedia.org/wiki/File:Gradient_Visual.svg}{Gradient Visual, Wikipedia}}}
+    \end{figure}
+\end{frame}
+
 % 从最速下降法来理解
 %% L(,) 距离函数
 %% 一维 U
@@ -139,6 +139,8 @@
     \footnotetext{\href{https://lazyprogrammer.me/tutorial-principal-components-analysis-pca/}{Tutorial: Principal Components Analysis (PCA)}}
 \end{frame}
 
+
+\subsection{spark实现代码}
 % 寻优耗时
 % spark,实现，没有寻优 => tree boost
 %% 用sklearn, spark代码引出Tree Boost

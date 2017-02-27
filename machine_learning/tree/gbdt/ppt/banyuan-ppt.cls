@@ -61,7 +61,7 @@
 
 \RequirePackage{xcolor}
 \RequirePackage{tikz} %draw picture
-\usetikzlibrary{shapes.geometric, arrows, calc}
+\usetikzlibrary{shapes.geometric,arrows,calc,mindmap,trees}
 \RequirePackage{pgfplots}
 \pgfplotsset{compat=newest}
 \pgfplotsset{plot coordinates/math parser=false}

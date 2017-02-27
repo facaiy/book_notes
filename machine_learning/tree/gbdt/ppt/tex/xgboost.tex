@@ -2,22 +2,131 @@
 
 \section{XGBoost}
 % http://nbviewer.jupyter.org/github/facaiy/book_notes/blob/master/machine_learning/tree/gbdt/xgboost/intro.ipynb
-\subsection{主要工作}
+\subsection{思路来源}
 % 决策树：分裂点、叶子值
 % 区别
 %% tree_boost: loss -> leaf value
 %% xgboost: loss -> split critor
 %% 反代b_j回loss
+\begin{frame}
+    J-节点树：
+    \begin{equation*}
+        f(x) = h \left (x; \{b_j, R_j\}^J_1 \right ) = \displaystyle \sum_{j=1}^J b_j \mathbf{1}(x \in R_j)
+    \end{equation*}
+
+    tree ensemble model：
+    \begin{equation*}
+        \hat{y}_i = \phi(x_i) = \displaystyle \sum_{k=1}^K f_k(x_i)
+    \end{equation*}
+
+    GBDT，毎次迭代可描述成最优问题：
+    \begin{align*}
+        f_m &= \operatorname{arg \, min}_f \sum_{i=1}^n L \left ( y_i, \hat{y}_i + f(x_i) \right ) \\
+            &= \operatorname{arg \, min} \mathcal{L}(f)
+    \end{align*}
+\end{frame}
+
 
 \subsection{具体推导}
 %简单推导
+\begin{frame}{正则}
+    \begin{align*}
+        \mathcal{L}(f) &= \displaystyle \sum_{i=1}^{n} L(y_i, \hat{y}_i + f(x_i)) + \Omega(f) \\[2ex]
+        \Omega(f) &= \gamma \|R_j\| + \frac{1}{2} \lambda \|b_j\|^2 \\
+        f(x) &= \sum_{j=1}^J b_j \mathbf{1}(x \in R_j)
+    \end{align*}
+\end{frame}
 
 %说明
-%% 二阶导，可以预知加速度，理论寻优路径更优
+\begin{frame}{泰勒展开}
+    \begin{align*}
+        \mathcal{L}(f) &\approx \sum_{i=1}^n \left [ L(y_i, \hat{y}_i) + g_i f(x_i) + \frac{1}{2} h_i f^2(x_i) \right ] + \Omega(f) \\
+        g_i &= \frac{\partial \, L(y_i, \hat{y}_i)}{\partial \hat{y}_i} \\
+        h_i &= \frac{\partial^2 \, L(y_i, \hat{y}_i)}{\partial \hat{y}^2_i} \\
+    \end{align*}
+
+    \begin{equation*}
+        \mathcal{L}(f) = \sum_{j=1}^J \left ( ( \sum_{i \in I_j} g_i ) b_j + \frac{1}{2} (\sum_{i \in I_j} h_i + \lambda) b_j^2 \right ) + \gamma \|R_j\|
+    \end{equation*}
+    {\tiny
+    详细推导可见：\href{http://nbviewer.jupyter.org/github/facaiy/book_notes/blob/master/machine_learning/tree/gbdt/xgboost/intro.ipynb}{xgboost的基本原理与实现简介，颜发才}}
+\end{frame}
+
+\begin{frame}{叶子值}
+    \begin{align*}
+        b_j &= \operatorname{arg \, min}_{b_j} \mathcal{L} \\
+            &= \operatorname{arg \, min}_{b_j} \sum_{j=1}^J \left ( ( \sum_{i \in I_j} g_i ) b_j + \frac{1}{2} (\sum_{i \in I_j} h_i + \lambda) b_j^2 \right ) + \gamma \|R_j\|  \\
+            &= \sum_{j=1}^J \operatorname{arg \, min}_{b_j} \left ( ( \sum_{i \in I_j} g_i ) \textcolor{red}{b_j} + \frac{1}{2} (\sum_{i \in I_j} h_i + \lambda) \textcolor{red}{b_j^2} \right ) + \gamma \|R_j\|
+    \end{align*}
+
+    \vfill
+
+    \begin{equation*}
+        b^*_j = - \frac{\sum_{i \in I_j} g_i}{\sum_{i \in I_j} h_i + \lambda}
+    \end{equation*}
+\end{frame}
+
+\begin{frame}{树生成的分割依据}
+    \begin{align*}
+        \mathcal{L} &= - \frac{1}{2} \sum_{j=1}^J \frac{(\sum_{i \in I_j} g_i)^2}{\sum_{i \in I_j} h_i + \lambda} + \gamma \|R_j\| \\
+                    &= - \frac{1}{2} H + \gamma T
+    \end{align*}
+
+    \vfill
+
+    \begin{align*}
+        \mathcal{L}_{\text{split}} &= \mathcal{L} - \mathcal{L}_L - \mathcal{L}_R \\
+                                  &= \frac{1}{2} (H_L + H_R - H) + \gamma (T - T_L - T_R) \\
+                                  &= \frac{1}{2} (H_L + H_R - H) - \gamma
+    \end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+    最终，树生成公式：
+    \begin{align*}
+        \mathcal{L} &= - \frac{1}{2} H + \gamma T \\
+        b^*_j &= - \frac{\sum_{i \in I_j} g_i}{\sum_{i \in I_j} h_i + \lambda}
+    \end{align*}
+
+    \begin{lstlisting}[language=C++,style=myScalastyle]
+void UpdateOneIter(int iter, DMatrix* train) override {
+    CHECK(ModelInitialized())
+        << "Always call InitModel or LoadModel before update";
+    if (tparam.seed_per_iteration || rabit::IsDistributed()) {
+        common::GlobalRandom().seed(tparam.seed * kRandSeedMagic + iter);
+    }
+    this->LazyInitDMatrix(train);
+    this->PredictRaw(train, &preds_);
+    obj_->GetGradient(preds_, train->info(), iter, &gpair_);
+    gbm_->DoBoost(train, this->FindBufferOffset(train), &gpair_);
+}
+    \end{lstlisting}
+    {\tiny \tt
+    source: xgboost/src/learner.cc \\[-2ex]
+    commit: 49bdb5c97fccd81b1fdf032eab4599a065c6c4f6}
+\end{frame}
+
 
 \subsection{重要参数}
 % parameter table
 
 % 选重要的几个来说明
+% https://github.com/dmlc/xgboost/blob/master/doc/how_to/param_tuning.md
+% https://github.com/dmlc/xgboost/blob/master/doc/parameter.md
+% https://www.analyticsvidhya.com/blog/2016/03/complete-guide-parameter-tuning-xgboost-with-codes-python/
 
 %% 注意：这应是弱分类器
+\begin{frame}
+    \begin{itemize}
+        \item \href{https://github.com/dmlc/xgboost/blob/master/doc/parameter.md}{XGBoost Parameters}
+            \begin{itemize}
+                \item objective \\
+                      reg:linear, binary:logistic, multi:softmax
+                \item num\_round, max\_depth
+                \item eta
+                \item lambda (L2 reg), alpha (L1 reg)
+            \end{itemize}
+
+        \item \href{https://github.com/dmlc/xgboost/blob/master/doc/how_to/param_tuning.md}{Notes on Parameter Tuning}
+    \end{itemize}
+\end{frame}

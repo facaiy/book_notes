@@ -22,17 +22,23 @@
 \subsection{算法推导}
 % 对树建模，公式推导
 %% 叶子区域
-\begin{frame}
-    \begin{align*}
-        h(x; \{b_j, R_j\}_1^J) = \sum_{j=1}^J b_j \, \mathbf{1}(x \in R_j)
-    \end{align*}
+\begin{frame}{J-叶子树模型}
+    $h(x; \{b_j, R_j\}_1^J) = \sum_{j=1}^J b_j \, \mathbf{1}(x \in R_j)$
+
+    \begin{figure}[!tb]
+        \includegraphics[width=\twopicwidth]{figure/decision_tree/iris}
+    \end{figure}
 \end{frame}
 
-% 作用：
-%% 1. 加速，省略了对权重值的寻优
-%% 2. 叶子上权重，更细粒度
-
-%% 损失 + 树 -> 树 == 先验 + 数据 -> 后验
+\begin{frame}
+    \begin{align*}
+        \rho_m & = \operatorname{arg \, min}_\rho \textstyle \sum_{i=1}^N L \left ( y_i, F_{m-1}(x_i) + \rho h(x_i; \mathbf{a}_m) \right) \\
+               & = \operatorname{arg \, min}_\rho \textstyle \sum_{i=1}^N L \left ( y_i, F_{m-1}(x_i) + \rho \sum_{j=1}^J b_j \, \mathbf{1}(x \in R_j) \right) \\
+               & = \operatorname{arg \, min}_\rho \textstyle \sum_{i=1}^N L \left ( y_i, F_{m-1}(x_i) + \sum_{j=1}^J \textcolor{blue}{\rho b_j} \, \mathbf{1}(x \in R_j) \right) \\[2ex]
+        \{\gamma_{jm}\}_1^J &= \operatorname{arg \, min}_{\{\gamma_j\}_1^J} \textstyle \sum_{i=1}^N L \left ( y_i, F_{m-1}(x_i) + \sum_{j=1}^J \textcolor{blue}{\gamma_j} \mathbf{1}(x \in R_{jm}) \right ) \\[2ex]
+        \gamma_{jm} &= \operatorname{arg \, min}_{\gamma} \textstyle \sum_{x_i \in R_{jm}} L(y_i, F_{m-1}(x_i) + \gamma) \\
+    \end{align*}
+\end{frame}
 
 
 \subsection{常见的损失函数}
@@ -48,6 +54,37 @@
 %% Two_class logistic regression and classification
 
 % 罗列spark和sklearn支持的loss function
+\begin{frame}
+    $\gamma_{jm} = \operatorname{arg \, min}_{\gamma} \sum_{x_i \in R_{jm}} L(y_i, F_{m-1}(x_i) + \gamma)$
+
+    \vfill
+
+    \begin{description}
+        \item [L2] $\gamma_{jm} = \operatorname{Ave} (y - F_{m-1}(x))$
+        \item [L1] $\gamma_{jm} = \operatorname{median}_W \left \{ \frac{y_i - F_{m-1}(x_i)}{h(x_i; \mathbf{a}_m)} \right \}_1^N$
+        \item [M-regression] \begin{equation*} L(y, F) = \begin{cases}
+                                    \frac{1}{2} (y - F)^2 \quad & |y - F| \leq \delta \\
+                                    \delta \cdot \left (\big |y - F \big | - \frac{\delta}{2} \right ) \quad & |y - F| > \delta
+                                \end{cases}
+                            \end{equation*}
+        \item [Binary Class] $\gamma_{jm} = \sum_{x_i \in R_{jm}} \tilde{y}_i \Big / \sum_{x_i \in R_{jm}} |\tilde{y}_i| (2 - |\tilde{y}_i|)$
+    \end{description}
+    {\tiny
+    详细推导可见：\href{http://nbviewer.jupyter.org/github/facaiy/book_notes/blob/master/machine_learning/tree/gbdt/treeboost/intro.ipynb}{TreeBoost原理和实现（sklearn）简介，颜发才}}
+\end{frame}
+
+
+\subsection{sklearn实现代码}
+%\begin{frame}
+%    \begin{block}{优点}
+%        \begin{itemize}
+%            \item 权重更细粒度
+%            \item 省去寻优，计算加速
+%            \item 实现简单
+%        \end{itemize}
+%    \end{block}
+%%% 损失 + 树 -> 树 == 先验 + 数据 -> 后验
+%\end{frame}
 
 \begin{frame}[fragile]
     \begin{lstlisting}[language=Python,style=myScalastyle]
