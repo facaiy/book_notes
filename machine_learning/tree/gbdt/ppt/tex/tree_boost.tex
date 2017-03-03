@@ -59,16 +59,24 @@
 
     \vfill
 
-    \begin{description}
-        \item [L2] $\gamma_{jm} = \operatorname{Ave} (y - F_{m-1}(x))$
-        \item [L1] $\gamma_{jm} = \operatorname{median}_W \left \{ \frac{y_i - F_{m-1}(x_i)}{h(x_i; \mathbf{a}_m)} \right \}_1^N$
-        \item [M-regression] \begin{equation*} L(y, F) = \begin{cases}
-                                    \frac{1}{2} (y - F)^2 \quad & |y - F| \leq \delta \\
-                                    \delta \cdot \left (\big |y - F \big | - \frac{\delta}{2} \right ) \quad & |y - F| > \delta
-                                \end{cases}
-                            \end{equation*}
-        \item [Binary Class] $\gamma_{jm} = \sum_{x_i \in R_{jm}} \tilde{y}_i \Big / \sum_{x_i \in R_{jm}} |\tilde{y}_i| (2 - |\tilde{y}_i|)$
-    \end{description}
+    \begin{block}{L2}
+        \begin{align*}
+            \gamma_{jm} &= \operatorname{arg \, min}_{\gamma} \sum_{x_i \in R_{jm}} (y_i, F_{m-1}(x_i) + \gamma)^2 \\
+                        &= \operatorname{Ave} (y - F_{m-1}(x))
+        \end{align*}
+    \end{block}
+
+    \begin{block}{L1}
+        \begin{equation*}
+            \gamma_{jm} = \operatorname{median}_W \left \{ \frac{y_i - F_{m-1}(x_i)}{h(x_i; \mathbf{a}_m)} \right \}_1^N
+        \end{equation*}
+    \end{block}
+%        \item [M-regression] \begin{equation*} L(y, F) = \begin{cases}
+%                                    \frac{1}{2} (y - F)^2 \quad & |y - F| \leq \delta \\
+%                                    \delta \cdot \left (\big |y - F \big | - \frac{\delta}{2} \right ) \quad & |y - F| > \delta
+%                                \end{cases}
+%                            \end{equation*}
+%        \item [Binary Class] $\gamma_{jm} = \sum_{x_i \in R_{jm}} \tilde{y}_i \Big / \sum_{x_i \in R_{jm}} |\tilde{y}_i| (2 - |\tilde{y}_i|)$
     {\tiny
     详细推导可见：\href{http://nbviewer.jupyter.org/github/facaiy/book_notes/blob/master/machine_learning/tree/gbdt/treeboost/intro.ipynb}{TreeBoost原理和实现（sklearn）简介，颜发才}}
 \end{frame}

@@ -9,16 +9,16 @@
 %% xgboost: loss -> split critor
 %% 反代b_j回loss
 \begin{frame}
-    J-节点树：
-    \begin{equation*}
-        f(x) = h \left (x; \{b_j, R_j\}^J_1 \right ) = \displaystyle \sum_{j=1}^J b_j \mathbf{1}(x \in R_j)
-    \end{equation*}
-
-    tree ensemble model：
-    \begin{equation*}
-        \hat{y}_i = \phi(x_i) = \displaystyle \sum_{k=1}^K f_k(x_i)
-    \end{equation*}
-
+%    J-节点树：
+%    \begin{equation*}
+%        f(x) = h \left (x; \{b_j, R_j\}^J_1 \right ) = \displaystyle \sum_{j=1}^J b_j \mathbf{1}(x \in R_j)
+%    \end{equation*}
+%
+%    tree ensemble model：
+%    \begin{equation*}
+%        \hat{y}_i = \phi(x_i) = \displaystyle \sum_{k=1}^K f_k(x_i)
+%    \end{equation*}
+%
     GBDT，毎次迭代可描述成最优问题：
     \begin{align*}
         f_m &= \operatorname{arg \, min}_f \sum_{i=1}^n L \left ( y_i, \hat{y}_i + f(x_i) \right ) \\
@@ -29,13 +29,13 @@
 
 \subsection{具体推导}
 %简单推导
-\begin{frame}{正则}
-    \begin{align*}
-        \mathcal{L}(f) &= \displaystyle \sum_{i=1}^{n} L(y_i, \hat{y}_i + f(x_i)) + \Omega(f) \\[2ex]
-        \Omega(f) &= \gamma \|R_j\| + \frac{1}{2} \lambda \|b_j\|^2 \\
-        f(x) &= \sum_{j=1}^J b_j \mathbf{1}(x \in R_j)
-    \end{align*}
-\end{frame}
+%\begin{frame}{正则}
+%    \begin{align*}
+%        \mathcal{L}(f) &= \displaystyle \sum_{i=1}^{n} L(y_i, \hat{y}_i + f(x_i)) + \Omega(f) \\[2ex]
+%        \Omega(f) &= \gamma \|R_j\| + \frac{1}{2} \lambda \|b_j\|^2 \\
+%        f(x) &= \sum_{j=1}^J b_j \mathbf{1}(x \in R_j)
+%    \end{align*}
+%\end{frame}
 
 %说明
 \begin{frame}{泰勒展开}
@@ -66,7 +66,7 @@
     \end{equation*}
 \end{frame}
 
-\begin{frame}{树生成的分割依据}
+\begin{frame}{不纯性度量(impurity)}
     \begin{align*}
         \mathcal{L} &= - \frac{1}{2} \sum_{j=1}^J \frac{(\sum_{i \in I_j} g_i)^2}{\sum_{i \in I_j} h_i + \lambda} + \gamma \|R_j\| \\
                     &= - \frac{1}{2} H + \gamma T
