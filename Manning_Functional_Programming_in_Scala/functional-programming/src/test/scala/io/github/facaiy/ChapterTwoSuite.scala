@@ -26,4 +26,10 @@ class ChapterTwoSuite extends FunSuite {
     assertResult(1)(
       findFirst(Array("hi", "world", "other"))(_.startsWith("w")))
   }
+
+  test("testIsSorted") {
+    assertResult(true)(isSorted(Array(1))(_ < _))
+    assertResult(true)(isSorted(Array(1, 3, 5, 7))(_ < _))
+    assertResult(false)(isSorted(Array(1, 2, 3, 4))(_ > _))
+  }
 }
