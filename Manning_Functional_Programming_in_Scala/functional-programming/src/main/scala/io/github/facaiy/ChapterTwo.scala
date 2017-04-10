@@ -1,4 +1,6 @@
-object C2 {
+package io.github.facaiy
+
+object ChapterTwo {
   // 2.4.1
   def factorial(n: Int): Int = {
     @annotation.tailrec
@@ -21,5 +23,13 @@ object C2 {
   }
 
   // 2.5.1
-  def findFirst() = {}
+  def findFirst[A](as: Array[A])(p: A => Boolean): Int = {
+    @annotation.tailrec
+    def loop(n: Int): Int =
+      if (n >= as.length) -1
+      else if(p(as(n))) n
+      else loop(n + 1)
+
+    loop(0)
+  }
 }
