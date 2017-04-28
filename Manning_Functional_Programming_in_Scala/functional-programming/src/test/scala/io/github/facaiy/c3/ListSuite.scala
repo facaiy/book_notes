@@ -159,7 +159,7 @@ class ListSuite extends FunSuite {
 
     assert(CustomList.hasSubsequence(
       sup,
-      CustomList(1, 3, 4)) === true)
+      CustomList(1, 3, 4)) === false)
 
     assert(CustomList.hasSubsequence(
       sup,

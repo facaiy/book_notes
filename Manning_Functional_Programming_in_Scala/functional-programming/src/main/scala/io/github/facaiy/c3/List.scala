@@ -137,20 +137,17 @@ object List {
     }
 
   // ex 3.24
-  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean =
-    sup match {
-      case Nil =>
-        sub match {
-          case Nil => true
-          case _ => false
-        }
+  @annotation.tailrec
+  def starsWith[A](l: List[A], prefix: List[A]): Boolean = (l, prefix) match {
+    case (_, Nil) => true
+    case (Cons(h1, t1), Cons(h2, t2)) if h1 == h2 => starsWith(t1, t2)
+    case _ => false
+  }
 
-      case Cons(x, xs) =>
-       sub match {
-         case Nil => true
-         case Cons(y, ys) =>
-           if (x == y && hasSubsequence(xs, ys)) true
-           else hasSubsequence(xs, sub)
-       }
-    }
+  @annotation.tailrec
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = sup match {
+    case Nil => sub == Nil
+    case _ if starsWith(sup, sub) => true
+    case Cons(h, t) => hasSubsequence(t, sub)
+  }
 }
