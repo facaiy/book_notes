@@ -20,7 +20,7 @@ object RNG {
   def nonNegativeInt(rng: RNG): (Int, RNG) = {
     val (n, rng1) = rng.nextInt
 
-    if (n == Int.MinValue) (Int.MaxValue, rng1)
+    if (n == Int.MinValue) nonNegativeInt(rng1)
     else (n.abs, rng1)
   }
 
@@ -34,26 +34,24 @@ object RNG {
   */
 
   // ex 6.3
-  /*
   def intDouble(rng: RNG): ((Int, Double), RNG) = {
     val (n, rng1) = rng.nextInt
-    val (d, rng2) = rng1.double
+    val (d, rng2) = double(rng1)
 
     ((n, d), rng2)
   }
 
   def doubleInt(rng: RNG): ((Double, Int), RNG) = {
-    val (d, rng1) = rng.double
+    val (d, rng1) = double(rng)
     val (n, rng2) = rng1.nextInt
 
     ((d, n), rng2)
   }
-  */
 
   def double3(rng: RNG): ((Double, Double, Double), RNG) = {
-    val (d1, rng1) = rng.double
-    val (d2, rng2) = rng1.double
-    val (d3, rng3) = rng2.double
+    val (d1, rng1) = double(rng)
+    val (d2, rng2) = double(rng1)
+    val (d3, rng3) = double(rng2)
 
     ((d1, d2, d3), rng3)
   }
@@ -61,29 +59,23 @@ object RNG {
   // ex 6.4
   /*
   def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
-    val rs = Range(0, count).scanLeft(rng){ (rng, x) =>
-      val (n, rng1) = rng.nextInt
+    val rs = Range(1, count).scanLeft((0, rng)){ case ((_, r), _) => r.nextInt }
 
-      ((n, rng1), rng1)
-    }
-
-    (rs.map(_._1), rs.last._2)
+    (rs.map(_._1).toList, rs.last._2)
   }
   */
 
   type Rand[+A] = RNG => (A, RNG)
 
   val int: Rand[Int] = _.nextInt
-  def unit[A](a: A): Rand[Int] = rng => (a, rng)
+  def unit[A](a: A): Rand[A] = (a, _)
 
-  /*
   def map[A, B](s: Rand[A])(f: A => B): Rand[B] =
     rng => {
       val (a, rng1) = s(rng)
 
       (f(a), rng1)
     }
-    */
 
   def nonNegativeEven: Rand[Int] = map(nonNegativeInt)(x => x - x % 2)
 
@@ -91,7 +83,6 @@ object RNG {
   def double: Rand[Double] = map(nonNegativeInt)(x => x / Int.MaxValue.toDouble + 1)
 
   // ex 6.6
-  /*
   def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     rng => {
       val (aa, rng1) = ra(rng)
@@ -99,7 +90,6 @@ object RNG {
 
       (f(aa, bb), rng2)
     }
-    */
 
   def both[A, B](ra: Rand[A], rb: Rand[B]): Rand[(A, B)] = map2(ra, rb)((_, _))
 
@@ -108,17 +98,18 @@ object RNG {
 
   // ex 6.7
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
-    rng => {
-      val rs = fs.scanLeft(rng){ (r, f) =>
+    rng =>
+      fs.foldRight((List.empty[A], rng)){ case (f, (es, r)) =>
         val (x, rng1) = f(r)
 
-        ((x, rng1), rng1)
+        (x :: es, rng1)
       }
 
-      (rs.map(_._1), rs.last._2)
-    }
-
   def ints(count: Int): Rand[List[Int]] = sequence(List.fill(count)(int))
+}
+
+/*
+object RNG {
 
   // ex 6.8
   def flatMap[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
@@ -173,3 +164,4 @@ case object Coin extends Input
 case object Turn extends Input
 
 case class Machine(locked: Boolean, candies: Int, coins: Int)
+*/

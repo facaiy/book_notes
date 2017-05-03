@@ -34,6 +34,7 @@ sealed trait Stream[+A] {
     case (n, Cons(h, t)) => Some(h(), (n - 1, t()))
   }
 
+  /*
   def drop(n: Int): Stream[A] = {
     @annotation.tailrec
     def loop(n: Int, xs: Stream[A]): Stream[A] =
@@ -44,6 +45,12 @@ sealed trait Stream[+A] {
       }
 
     loop(n, this)
+  }
+  */
+  @annotation.tailrec
+  final def drop(n: Int): Stream[A] = this match {
+    case Cons(_, t) if n > 0 => t().drop(n - 1)
+    case _ => this
   }
 
   // ex 5.3
@@ -78,7 +85,7 @@ sealed trait Stream[+A] {
   }
 
   // ex 5.6
-  def headOption: Option[A] = foldRight(Option.empty[A])((x, z) => Some(x))
+  def headOption: Option[A] = foldRight(Option.empty[A])((h, _) => Some(h))
 
   // ex 5.7
   /*
@@ -91,9 +98,9 @@ sealed trait Stream[+A] {
   }
 
   def filter(f: A => Boolean): Stream[A] =
-    foldRight(Stream.empty[A])((x, z) => if (f(x)) cons(x, z) else z)
+    foldRight(Stream.empty[A])((h, t) => if (f(h)) cons(h, t) else t)
 
-  def append[B >: A](e: => B): Stream[B] = concat(cons(e, empty[B]))
+  def append[B >: A](e: => B): Stream[B] = concat(Stream(e))
 
   def concat[B >: A](as: Stream[B]): Stream[B] = foldRight(as)(cons(_, _))
 
@@ -140,9 +147,10 @@ sealed trait Stream[+A] {
   }
   */
   def scanRight[B](z: => B)(f: (A, B) => B): Stream[B] =
-    foldRight(cons(z, empty)){ case (x, z) =>
-      val e = f(x, z.headOption.getOrElse(throw new NoSuchElementException))
-      cons(e, z)
+    foldRight(Stream(z)){ case (x, z) =>
+      lazy val z1 = z
+      val e = f(x, z1.headOption.getOrElse(throw new NoSuchElementException))
+      cons(e, z1)
     }
 }
 
