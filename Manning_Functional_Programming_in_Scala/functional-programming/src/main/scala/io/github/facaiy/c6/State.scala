@@ -70,19 +70,23 @@ object RNG {
   val int: Rand[Int] = _.nextInt
   def unit[A](a: A): Rand[A] = (a, _)
 
+  /*
   def map[A, B](s: Rand[A])(f: A => B): Rand[B] =
     rng => {
       val (a, rng1) = s(rng)
 
       (f(a), rng1)
     }
+    */
+  def map[A, B](s: Rand[A])(f: A => B): Rand[B] = flatMap(s)(x => unit(f(x)))
 
   def nonNegativeEven: Rand[Int] = map(nonNegativeInt)(x => x - x % 2)
 
   // ex 6.5
-  def double: Rand[Double] = map(nonNegativeInt)(x => x / Int.MaxValue.toDouble + 1)
+  def double: Rand[Double] = map(nonNegativeInt)(x => x / (Int.MaxValue.toDouble + 1))
 
   // ex 6.6
+  /*
   def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     rng => {
       val (aa, rng1) = ra(rng)
@@ -90,6 +94,16 @@ object RNG {
 
       (f(aa, bb), rng2)
     }
+    */
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    flatMap(ra)(a => map(rb)(b => f(a, b)))
+  /*
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    for {
+      a <- ra
+      b <- rb
+    } yield f(a, b)
+    */
 
   def both[A, B](ra: Rand[A], rb: Rand[B]): Rand[(A, B)] = map2(ra, rb)((_, _))
 
@@ -106,10 +120,6 @@ object RNG {
       }
 
   def ints(count: Int): Rand[List[Int]] = sequence(List.fill(count)(int))
-}
-
-/*
-object RNG {
 
   // ex 6.8
   def flatMap[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
@@ -124,24 +134,26 @@ object RNG {
     if (x + (n - 1) - mod >= 0) unit(mod)
     else nonNegativeLessThan(n)
   }
-
-  // ex 6.9
-  def map[A, B](s: Rand[A])(f: A => B): Rand[B] = flatMap(s)(unit(_))
-
-  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
-    flatMap(ra)(a => rng0 => flatMap(rb)(b => rng1 => (f(a, b), rng1)))
 }
 
-
 case class State[S, +A](run: S => (A, S)) {
-  def map[B](f: A => B): State[S, B] = flatMap(unit(_))
+  import State._
 
+  def map[B](f: A => B): State[S, B] = flatMap(x => unit(f(x)))
+
+  /*
   def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
-    flatMap(a => sb.flatMap(b => State(r => (f(a, b), r))))
+    flatMap(a => sb.map(b => f(a, b)))
+    */
+  def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
+    for {
+      a <- this
+      b <- sb
+    } yield f(a, b)
 
   def flatMap[B](f: A => State[S, B]): State[S, B] = {
-    val r = s: S =>{
-      val a, s1 = run(s)
+    val r = (s: S) => {
+      val (a, s1) = run(s)
       f(a).run(s1)
     }
 
@@ -149,19 +161,49 @@ case class State[S, +A](run: S => (A, S)) {
   }
 }
 
-object State {
-  type Rand[A] = State[RNG, A]
-
-  def unit[S, A](a: A): State[S, A] = State(s => (a, s))
-
-  def sequence[A](ss: List[State[S, A]]): State[S, List[A]] =
-    ss.foldRight(State(s => (List.empty, s)))((x, z) => x.map2(z)(_ :: _))
-}
-
-// ex 6.11
 sealed trait Input
 case object Coin extends Input
 case object Turn extends Input
 
 case class Machine(locked: Boolean, candies: Int, coins: Int)
-*/
+
+object State {
+  type Rand[A] = State[RNG, A]
+
+  def unit[S, A](a: A): State[S, A] = State(s => (a, s))
+
+  def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
+    ss.foldRight(State((s: S) => (List.empty[A], s)))((x, z) => x.map2(z)(_ :: _))
+
+  def get[S]: State[S, S] = State(s => (s, s))
+
+  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
+
+  def modify[S](f: S => S): State[S, Unit] =
+    for {
+      s <- get
+      _ <- set(f(s))
+    } yield ()
+
+  // ex 6.11
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
+    val ss: List[State[Machine, (Int, Int)]] = inputs.map { input =>
+      val s = (m: Machine) => {
+        val m1: Machine = input match {
+          case Coin =>
+            if (m.locked && m.candies > 0) Machine(false, m.candies, m.coins)
+            else m
+          case Turn =>
+            if (!m.locked && m.candies > 0) Machine(true, m.candies - 1, m.coins + 1)
+            else m
+        }
+
+        ((m1.candies, m1.coins), m1)
+      }
+
+      State(s)
+    }
+
+    ss.reduce(_.map2(_)((_, a1) => a1))
+  }
+}
