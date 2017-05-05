@@ -17,11 +17,18 @@ object RNG {
   }
 
   // ex 6.1
+  /* wrong: 0's probability is less than others's.
   def nonNegativeInt(rng: RNG): (Int, RNG) = {
     val (n, rng1) = rng.nextInt
 
     if (n == Int.MinValue) nonNegativeInt(rng1)
     else (n.abs, rng1)
+  }
+  */
+  // This maps Int.MinValue to Int.MaxValue and -1 to 0.
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (i, r) = rng.nextInt
+    (if (i < 0) -(i + 1) else i, r)
   }
 
   // ex 6.2
@@ -111,6 +118,7 @@ object RNG {
   def doubleInt: Rand[(Double, Int)] = both(double, int)
 
   // ex 6.7
+  /*
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
     rng =>
       fs.foldRight((List.empty[A], rng)){ case (f, (es, r)) =>
@@ -118,6 +126,9 @@ object RNG {
 
         (x :: es, rng1)
       }
+      */
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
+    fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
 
   def ints(count: Int): Rand[List[Int]] = sequence(List.fill(count)(int))
 
@@ -173,7 +184,7 @@ object State {
   def unit[S, A](a: A): State[S, A] = State(s => (a, s))
 
   def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
-    ss.foldRight(State((s: S) => (List.empty[A], s)))((x, z) => x.map2(z)(_ :: _))
+    ss.foldRight(unit[S, List[A]](List()))((x, z) => x.map2(z)(_ :: _))
 
   def get[S]: State[S, S] = State(s => (s, s))
 
@@ -187,23 +198,16 @@ object State {
 
   // ex 6.11
   def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
-    val ss: List[State[Machine, (Int, Int)]] = inputs.map { input =>
-      val s = (m: Machine) => {
-        val m1: Machine = input match {
-          case Coin =>
-            if (m.locked && m.candies > 0) Machine(false, m.candies, m.coins)
-            else m
-          case Turn =>
-            if (!m.locked && m.candies > 0) Machine(true, m.candies - 1, m.coins + 1)
-            else m
+    val update: Machine => Machine =
+      inputs.map { i => (m: Machine) =>
+        (i, m) match {
+          case (_, Machine(_, 0, _)) => m
+          case (Coin, Machine(true, candies, coins)) => Machine(false, candies, coins + 1)
+          case (Turn, Machine(false, candies, coins)) => Machine(true, candies - 1, coins)
+          case _ => m
         }
+      }.reduceLeft(_ andThen _)
 
-        ((m1.candies, m1.coins), m1)
-      }
-
-      State(s)
-    }
-
-    ss.reduce(_.map2(_)((_, a1) => a1))
+    State(m => {val m1 = update(m); ((m1.candies, m1.coins), m1)})
   }
 }
