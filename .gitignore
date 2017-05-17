@@ -77,3 +77,6 @@ target/
 *.snm
 *.toc
 *.vrb
+
+# spark sql
+metastore_db
