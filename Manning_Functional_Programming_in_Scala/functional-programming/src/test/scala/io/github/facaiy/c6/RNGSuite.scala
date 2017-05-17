@@ -1,6 +1,5 @@
 package io.github.facaiy.c6
 
-import io.github.facaiy.c5._
 import org.scalatest.FunSuite
 
 /**

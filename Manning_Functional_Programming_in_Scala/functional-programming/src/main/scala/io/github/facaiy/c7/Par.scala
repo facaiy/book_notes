@@ -141,7 +141,7 @@ object Examples {
 
   def max(ints: IndexedSeq[Int]): Par[Int] = fold(ints)(Int.MinValue, x => x)(_ max _)
 
-  def count(ps: List[String]): Par[Int] = fold(ps.toArray)(0, _.split("\\s+").length)(_ + _)
+  def count(ps: List[String]): Par[Int] = fold(ps.toArray[String])(0, _.split("\\s+").length)(_ + _)
 
   def map3[A, B, C, D](pa: Par[A], pb: Par[B], pc: Par[C])(f: (A, B, C) => D): Par[D] = {
     val pab: Par[(A, B)] = map2(pa, pb)((_, _))
