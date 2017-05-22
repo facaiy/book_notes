@@ -131,6 +131,6 @@ class ExampleSuite extends FunSuite {
   }
   
   test("sequence") {
-    
+  
   }
 }

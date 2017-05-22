@@ -84,7 +84,7 @@ object Prop {
   }
   */
   
-  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = forAll(g.forSize)(f)
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = forAll(g.g)(f)
   
   def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
     (m, n, rng) =>
@@ -178,7 +178,7 @@ object Prop {
     forAll(g ** threadPools){ case x ** es => f(x)(es).get }
   
   def forAllPar[A](g: SGen[A])(f: A => Par[Boolean]): Prop =
-    forAll(x => g.forSize(x) ** threadPools){ case x ** es => f(x)(es).get }
+    forAll(x => g.g(x) ** threadPools){ case x ** es => f(x)(es).get }
 }
 
 object ** {
@@ -296,9 +296,21 @@ object Gen {
     Gen.unit(s => g.get(Simple(s.hashCode)))
 }
 
-case class SGen[+A](forSize: Int => Gen[A]) {
+case class SGen[+A](g: Int => Gen[A]) {
   // ex 8.11
-  def map[B](f: A => B): SGen[B] = SGen(n => forSize(n).map(f))
+  def map[B](f: A => B): SGen[B] = SGen(n => g(n).map(f))
+  
+  def apply(n: Int): Gen[A] = g(n)
+  
+  def flatMap[B](f: A => SGen[B]): SGen[B] = {
+    val g2: Int => Gen[B] =
+      n => g(n).flatMap(a => f(a).g(n))
+    
+    SGen(g2)
+  }
+  
+  def **[B](s2: SGen[B]): SGen[(A, B)] =
+    SGen(n => apply(n) ** s2.g(n))
 }
 
 object SGen {
