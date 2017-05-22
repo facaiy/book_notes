@@ -108,6 +108,10 @@ object Par {
 
   def map2UseFlatmap[A, B, C](pa: Par[A], pb: Par[B])(f: (A, B) => C): Par[C] =
     flatMap(pa)(a => flatMap(pb)(b => unit(f(a, b))))
+  
+  // sec 8.4.2
+  def equal[A](p1: Par[A], p2: Par[A]): Par[Boolean] =
+    Par.map2(p1, p2)(_ == _)
 }
 
 object Examples {
@@ -141,7 +145,7 @@ object Examples {
 
   def max(ints: IndexedSeq[Int]): Par[Int] = fold(ints)(Int.MinValue, x => x)(_ max _)
 
-  def count(ps: List[String]): Par[Int] = fold(ps.toArray)(0, _.split("\\s+").length)(_ + _)
+  def count(ps: List[String]): Par[Int] = fold(ps.toArray[String])(0, _.split("\\s+").length)(_ + _)
 
   def map3[A, B, C, D](pa: Par[A], pb: Par[B], pc: Par[C])(f: (A, B, C) => D): Par[D] = {
     val pab: Par[(A, B)] = map2(pa, pb)((_, _))

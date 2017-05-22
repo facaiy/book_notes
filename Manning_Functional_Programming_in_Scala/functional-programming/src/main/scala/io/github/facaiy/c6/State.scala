@@ -1,4 +1,4 @@
-package io.github.facaiy.c5
+package io.github.facaiy.c6
 
 trait RNG {
   def nextInt: (Int, RNG) // Should generate a random `Int`. We'll later define other functions in terms of `nextInt`.
@@ -179,8 +179,6 @@ case object Turn extends Input
 case class Machine(locked: Boolean, candies: Int, coins: Int)
 
 object State {
-  type Rand[A] = State[RNG, A]
-
   def unit[S, A](a: A): State[S, A] = State(s => (a, s))
 
   def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
@@ -209,5 +207,19 @@ object State {
       }.reduceLeft(_ andThen _)
 
     State(m => {val m1 = update(m); ((m1.candies, m1.coins), m1)})
+  }
+}
+
+object RNG2 {
+  type Rand[A] = State[RNG, A]
+
+  def nonNegativeInt: Rand[Int] ={
+    State(RNG.nonNegativeInt)
+  }
+
+  def nonNegativeLessThan(n: Int): Rand[Int] = nonNegativeInt.flatMap{ x =>
+    val mod = x % n
+    if (x + (n - 1) - mod >= 0) State.unit(mod)
+    else nonNegativeLessThan(n)
   }
 }
