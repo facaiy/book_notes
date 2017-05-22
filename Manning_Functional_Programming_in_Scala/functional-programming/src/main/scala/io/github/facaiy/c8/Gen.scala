@@ -1,8 +1,12 @@
 package io.github.facaiy.c8
 
+import java.util.concurrent.{ExecutorService, Executors}
+
 import io.github.facaiy.c5.Stream
+import io.github.facaiy.c6.RNG.Simple
 import io.github.facaiy.c6.{RNG, RNG2, State}
 import io.github.facaiy.c6.RNG2.Rand
+import io.github.facaiy.c7.Par.Par
 import io.github.facaiy.c8.Prop._
 
 /**
@@ -144,6 +148,41 @@ object Prop {
         case e: Exception => Falsified(buildMsg("()", e), 0)
       }
   }
+  
+  // ex 8.15
+  def check[A](candidates: Seq[A])(f: A => Boolean): Prop = {
+    val sGen = candidates.zipWithIndex.map{ case (x, i) =>
+      i -> Gen.unit(x)
+    }.toMap
+    
+    Prop { (_, _, rng) =>
+      forAll(sGen)(f).run(candidates.size, 1, rng) match {
+        case Passed => Proved
+        case x => x
+      }
+    }
+  }
+  
+  def checkPar(p: => Par[Boolean]): Prop = {
+    val threadPools: Seq[ExecutorService] =
+      Executors.newCachedThreadPool :: Range(1, 4).map(Executors.newFixedThreadPool).toList
+    check(threadPools)(es => p(es).get)
+  }
+  
+  val threadPools: Gen[ExecutorService] = Gen.weighted(
+    Gen.choose(1, 4).map(Executors.newFixedThreadPool) -> .75,
+    Gen.unit(Executors.newCachedThreadPool) -> .25
+  )
+  
+  def forAllPar[A](g: Gen[A])(f: A => Par[Boolean]): Prop =
+    forAll(g ** threadPools){ case x ** es => f(x)(es).get }
+  
+  def forAllPar[A](g: SGen[A])(f: A => Par[Boolean]): Prop =
+    forAll(x => g.forSize(x) ** threadPools){ case x ** es => f(x)(es).get }
+}
+
+object ** {
+  def unapply[A, B](p: (A, B)): Option[(A, B)] = Some(p)
 }
 
 
@@ -191,6 +230,9 @@ case class Gen[+A](sample: Rand[A]) {
   
   // ex8.10
   def unsized: SGen[A] = SGen(_ => this)
+  
+  // sec 8.4.2
+  def **[B](g: Gen[B]): Gen[(A, B)] = this.map2(g)((_, _))
 }
 
 object Gen {
@@ -247,6 +289,11 @@ object Gen {
       else gMax._1
     }
   }
+  
+  // ex 8.19
+  /* use hashcode to create a RNG */
+  def genStringIntFn(g: Gen[Int]): Gen[String => Int] =
+    Gen.unit(s => g.get(Simple(s.hashCode)))
 }
 
 case class SGen[+A](forSize: Int => Gen[A]) {

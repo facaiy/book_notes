@@ -1,9 +1,7 @@
 package io.github.facaiy.c8
 
-import java.util.concurrent.{ExecutorService, Executors}
-
 import io.github.facaiy.c6.RNG.Simple
-import io.github.facaiy.c7.Par
+import io.github.facaiy.c7.{Examples, Par}
 import org.scalatest.FunSuite
 
 /**
@@ -67,11 +65,72 @@ class SGenSuite extends FunSuite {
     Prop.run(sortProp)
   }
   
-  test("check") {
-    val es: ExecutorService = Executors.newCachedThreadPool
-    val prop = Prop.check(
-      Par.map(Par.unit(1))(_ + 1)(es).get === Par.unit(2)(es).get)
+  test("checkPar") {
+    val prop = Prop.checkPar {
+      Par.equal(
+        Par.map(Par.unit(1))(_ + 1),
+        Par.unit(2)
+      )
+    }
+
+    Prop.run(prop)
+  }
+  
+  test("forAllPar") {
+    val pint = Gen.choose(0, 10).map(Par.unit(_))
+    val p4 = Prop.forAllPar(pint)(x => Par.equal(Par.map(x)(y => y), x))
+    
+    Prop.run(p4)
+  }
+  
+  // ex 8.16
+  test("richer generator for Par[Int]") {
+    val smallInt = Gen.choose(0, 10)
+    val ls = SGen.listOf1(smallInt).map(_.toArray)
+    val prop = Prop.forAllPar(ls)(x => Par.equal(Examples.sum(x), Par.unit(x.sum)))
+    
+    // blockPar will get into trouble because of deadlock.
+    Prop.run(prop, 2, 1)
+  }
+  
+  // ex 8.17
+  test("fork") {
+    val prop = Prop.checkPar {
+      Par.equal(
+        Par.fork(Par.unit(1)),
+        Par.unit(1)
+      )
+    }
     
     Prop.run(prop)
+  }
+  
+  // ex 8.18
+  /**
+   * 1. s.takeWhile(f).forall(f) == true
+   * 2. s.takeWhile(true) == s
+   * 3. s.takeWhile(false) = empty
+   * 4. s = s.takeWhile(f) :: s.dropWhile(f)
+   */
+}
+
+class ExampleSuite extends FunSuite {
+  // ex 8.20
+  test("take") {
+    val smallInt = Gen.choose(-10, 10)
+    val prop = Prop.forAll(SGen.listOf1(smallInt)) { ns =>
+      val n = Gen.choose(0, ns.length)
+      n.map(x => ns.take(x).length === x).get(Simple(System.currentTimeMillis))
+    }
+    
+    Prop.run(prop)
+  }
+  
+  test("Tree") {
+  
+  }
+  
+  test("sequence") {
+    
   }
 }
