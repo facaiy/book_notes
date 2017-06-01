@@ -59,7 +59,7 @@ object MyParsers extends Parsers[Parser] {
 
   // ex 9.15
   override def run[A](p: Parser[A])(input: String): Either[ParseError, A] =
-    p(input) match {
+    p(Location(input, 0)) match {
       case Failure(e, _) => Left(e)
       case Success(a, _) => Right(a)
     }
