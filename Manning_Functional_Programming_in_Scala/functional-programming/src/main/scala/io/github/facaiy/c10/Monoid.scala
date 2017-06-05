@@ -57,10 +57,11 @@ object Monoid {
   // ex 10.3
   def endoMonoid[A] = new Monoid[A => A] {
     override def op(a1: (A) => A, a2: (A) => A): (A) => A = a1 compose a2
-    override def zero: (A) => A = x => x
+    override def zero = (x: A) => x
   }
 
   // ex 10.4
+  /*
   def monoidLaws[A](m: Monoid[A], gen: Gen[A]): Prop = {
     val associative: Gen[Boolean] = for {
       a <- gen
@@ -68,9 +69,25 @@ object Monoid {
       c <- gen
     } yield m.op(m.op(a, b), c) == m.op(a, m.op(b, c))
 
-    val identity: Gen[Boolean] = gen.map(x => m.op(x, m.zero) == m.op(m.zero, x))
+    val identity: Gen[Boolean] = gen.map(x =>
+      m.op(x, m.zero) == x && x == m.op(m.zero, x))
 
     Prop.forAll(identity)(x => x) && Prop.forAll(associative)(x => x)
+  }
+  */
+  def monoidLaws[A](m: Monoid[A], gen: Gen[A]): Prop = {
+    val associative = Prop.forAll(
+        for {
+          a <- gen
+          b <- gen
+          c <- gen
+        } yield (a, b, c)
+      ){ case (a, b, c) => m.op(m.op(a, b), c) == m.op(a, m.op(b, c))}
+    
+    val identity = Prop.forAll(gen)((a: A) =>
+        m.op(a, m.zero) == a && a == m.op(m.zero, a))
+    
+    associative && identity
   }
 
   def concatenate[A](as: List[A], m: Monoid[A]): A =
@@ -78,7 +95,8 @@ object Monoid {
 
   // ex 10.5
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
-   as.map(f).foldLeft(m.zero)(m.op)
+   // as.map(f).foldLeft(m.zero)(m.op)
+   as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
 
   // ex 10.6
   def foldLeft[A, B](init: B, as: List[A])(f: (A, B) => B): B =
@@ -115,6 +133,7 @@ object Monoid {
     */
 
   // ex 10.9
+  /*
   sealed trait Container[+A] {
     def map[B](f: A => B): Container[B] = flatMap(x => Fill(f(x)))
 
@@ -166,6 +185,22 @@ object Monoid {
     foldMapV(as, m)(x => Some((x, x)))
       .exists(x => x._1 < x._2)
   }
+  */
+  def isOrdered(as: List[Int]): Boolean = {
+    val m = new Monoid[Option[(Int, Int, Boolean)]] {
+      def op(a1: Option[(Int, Int, Boolean)], a2: Option[(Int, Int, Boolean)]): Option[(Int, Int, Boolean)] =
+        (a1, a2) match {
+          case (Some((x1, y1, b1)), Some((x2, y2, b2))) =>
+            Some((x1 min x2, y1 max y2, b1 && b2 && y1 <= x2))
+          case (x, None) => x
+          case (None, x) => x
+        }
+  
+      override def zero: Option[(Int, Int, Boolean)] = None
+    }
+    
+    foldMap(as, m)(x => Some(x, x, true)).map(_._3).getOrElse(true)
+  }
 
   // ex 10.16
   def productMonoid[A, B](A: Monoid[A])(B: Monoid[B]): Monoid[(A, B)] = new Monoid[(A, B)] {
@@ -190,6 +225,7 @@ object Monoid {
   }
 
   // ex 10.18
+  /*
   def bag[A](as: IndexedSeq[A]): Map[A, Int] = {
     val m: Monoid[A => Map[A, Int]] = functionMonoid(mapMergeMonoid(intAddition))
 
@@ -197,12 +233,16 @@ object Monoid {
       m.op(acc, _ => Map(x -> 1))
     }(as.head)
   }
+  */
+  def bag[A](as: IndexedSeq[A]): Map[A, Int] =
+    foldMapV(as, mapMergeMonoid[A, Int](intAddition))(a => Map(a -> 1))
 }
 
 sealed trait WC
 case class Stub(chars: String) extends WC
 case class Part(lStub: String, words: Int, rStub: String) extends WC
 
+/*
 object WC {
   // ex 10.10
   val wcMonoid = new Monoid[WC] {
@@ -235,6 +275,32 @@ object WC {
     case Part("", w, _) => w + 1
     case Part(_, w, "") => w + 1
     case Part(_, w, _) => w + 2
+  }
+}
+*/
+object WC {
+  val wcMonoid = new Monoid[WC] {
+    override def op(a1: WC, a2: WC): WC = (a1, a2) match {
+      case (Stub(x), Stub(y)) => Stub(x + y)
+      case (Stub(x), Part(l, w, r)) => Part(x + l, w, r)
+      case (Part(l, w, r), Stub(y)) => Part(l, w, r + y)
+      case (Part(l, w, r), Part(l2, w2, r2)) =>
+        Part(l, w + w2 + (if ((r + l2).isEmpty) 0 else 1), r2)
+    }
+  
+    override def zero: WC = Stub("")
+  }
+  
+  def str2wc(str: String): WC = Monoid.foldMapV(str, wcMonoid) { x =>
+    if (x.isLetterOrDigit) Stub(x.toString)
+    else Part("", 0, "")
+  }
+  
+  def unstub(s: String) = s.length min 1
+  
+  def wordCount(str: String): Int = str2wc(str) match {
+    case Stub(x) => unstub(x)
+    case Part(l, w, r) => unstub(l) + w + unstub(r)
   }
 }
 
