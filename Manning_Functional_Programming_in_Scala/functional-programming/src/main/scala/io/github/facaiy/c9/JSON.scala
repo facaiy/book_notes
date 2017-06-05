@@ -13,8 +13,10 @@ object JSON {
   case class JArray(get: IndexedSeq[JSON]) extends JSON
   case class JObject(get: Map[String, JSON]) extends JSON
 
+  /*
   def jsonParser[Parser[+_]](P: Parsers[Parser]): Parser[JSON] = {
     import P.{string => _, _}
     implicit def tok(s: String) = token(P.string(s))
   }
+  */
 }
