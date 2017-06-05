@@ -22,4 +22,23 @@ class MonoidSuite extends FunSuite {
     assert(Monoid.isOrdered(Range(0, 10).toList) === true)
     assert(Monoid.isOrdered(Range(10, 0, -1).toList) === false)
   }
+
+  test("wordCount") {
+    assert(WC.wordCount("") === 0)
+    assert(WC.wordCount("?") === 0)
+    assert(WC.wordCount("abc") === 1)
+    assert(WC.wordCount(" abc ") === 1)
+    assert(WC.wordCount("Hello,world") === 2)
+    assert(WC.wordCount("Hello, world!") === 2)
+
+    val longText = "Represents a value of one of two possible types (a disjoint union.) " +
+      "An instance of Either is an instance of either scala.util.Left or scala.util.Right."
+    assert(WC.wordCount(longText) === 28)
+  }
+
+  test("bag") {
+    val vs = Vector("a", "rose", "is", "a", "rose")
+
+    assert(Monoid.bag(vs) === Map("a"-> 2, "rose" -> 2, "is" -> 1))
+  }
 }

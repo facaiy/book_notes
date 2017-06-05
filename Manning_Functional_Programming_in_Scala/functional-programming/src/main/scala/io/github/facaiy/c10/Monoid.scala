@@ -166,4 +166,119 @@ object Monoid {
     foldMapV(as, m)(x => Some((x, x)))
       .exists(x => x._1 < x._2)
   }
+
+  // ex 10.16
+  def productMonoid[A, B](A: Monoid[A])(B: Monoid[B]): Monoid[(A, B)] = new Monoid[(A, B)] {
+    override def op(a1: (A, B), a2: (A, B)): (A, B) = (A.op(a1._1, a2._1), B.op(a1._2, a2._2))
+    override def zero: (A, B) = (A.zero, B.zero)
+  }
+
+  def mapMergeMonoid[K, V](V: Monoid[V]): Monoid[Map[K, V]] =
+    new Monoid[Map[K, V]] {
+      override def op(a1: Map[K, V], a2: Map[K, V]): Map[K, V] =
+        (a1.keySet ++ a2.keySet).foldLeft(zero){ (acc, k) =>
+          acc.updated(k, V.op(a1.getOrElse(k, V.zero),
+                              a2.getOrElse(k, V.zero)))
+        }
+      override def zero: Map[K, V] = Map[K, V]()
+    }
+
+  // ex 10.17
+  def functionMonoid[A, B](B: Monoid[B]): Monoid[A => B] = new Monoid[(A) => B] {
+    override def op(f1: (A) => B, f2: (A) => B): (A) => B = x => B.op(f1(x), f2(x))
+    override def zero: (A) => B = _ => B.zero
+  }
+
+  // ex 10.18
+  def bag[A](as: IndexedSeq[A]): Map[A, Int] = {
+    val m: Monoid[A => Map[A, Int]] = functionMonoid(mapMergeMonoid(intAddition))
+
+    as.foldLeft(m.zero) { (acc, x) =>
+      m.op(acc, _ => Map(x -> 1))
+    }(as.head)
+  }
+}
+
+sealed trait WC
+case class Stub(chars: String) extends WC
+case class Part(lStub: String, words: Int, rStub: String) extends WC
+
+object WC {
+  // ex 10.10
+  val wcMonoid = new Monoid[WC] {
+    override def op(a1: WC, a2: WC): WC = (a1, a2) match {
+      case (Stub(""), Stub("")) => Part("", 0, "")
+      case (Stub(""), Stub(y)) => Part("", 0, y)
+      case (Stub(x), Stub("")) => Part(x, 0, "")
+      case (Stub(x), Stub(y)) => Stub(x + y)
+      case (Stub(""), Part(_, w, r)) => Part("", w + 1, r)
+      case (Stub(x), Part(l, w, r)) => Part(x + l, w, r)
+      case (Part(l, w, _), Stub("")) => Part(l, w + 1, "")
+      case (Part(l, w, r), Stub(y)) => Part(l, w, r + y)
+      case (Part(l, w, ""), Part("", w2, r2)) => Part(l, w + w2, r2)
+      case (Part(l, w, _), Part(_, w2, r2)) => Part(l, w + 1 + w2, r2)
+    }
+
+    override def zero: WC = Stub("")
+  }
+
+  // ex 10.11
+  def str2wc(str: String): WC = Monoid.foldMapV(str, wcMonoid){ x =>
+    if (x.isLetterOrDigit) Stub(x.toString)
+    else Stub("")
+  }
+
+  def wordCount(str: String): Int = str2wc(str) match {
+    case Stub("") => 0
+    case Stub(_) => 1
+    case Part("", w, "") => w
+    case Part("", w, _) => w + 1
+    case Part(_, w, "") => w + 1
+    case Part(_, w, _) => w + 2
+  }
+}
+
+
+trait Foldable[F[_]] {
+  import Monoid.{dual, endoMonoid}
+
+  def foldRight[A, B](as: F[A])(z: B)(f: (A, B) => B): B =
+    foldMap(as)(x => (y: B) => f(x, y))(endoMonoid)(z)
+
+  def foldLeft[A, B](as: F[A])(z: B)(f: (B, A) => B): B =
+    foldMap(as)(x => (y: B) => f(y, x))(dual(endoMonoid))(z)
+
+  def foldMap[A, B](as: F[A])(f: A => B)(mb: Monoid[B]): B =
+    foldLeft(as)(mb.zero)((z, x) => mb.op(z, f(x)))
+
+  def concatenate[A](as: F[A])(m: Monoid[A]): A =
+    foldLeft(as)(m.zero)(m.op)
+
+  // ex 10.15
+  def toList[A](fa: F[A]): List[A] = foldRight(fa)(List.empty[A])(_ :: _)
+}
+
+// ex 10.12
+object ListFoldable extends Foldable[List] {
+  override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
+
+  override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
+
+  override def foldMap[A, B](as: List[A])(f: (A) => B)(mb: Monoid[B]): B =
+    concatenate(as.map(f))(mb)
+}
+
+// ex 10.13
+// similar with ex 10.12
+
+// ex 10.14
+object OptionFoldable extends Foldable[Option] {
+  override def foldRight[A, B](as: Option[A])(z: B)(f: (A, B) => B): B =
+    foldLeft(as)(z)((b, a) => f(a, b))
+
+  override def foldLeft[A, B](as: Option[A])(z: B)(f: (B, A) => B): B =
+    as.map(x => f(z, x)).getOrElse(z)
+
+  override def foldMap[A, B](as: Option[A])(f: (A) => B)(mb: Monoid[B]): B =
+    as.map(f).getOrElse(mb.zero)
 }
