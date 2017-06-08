@@ -1,37 +1,38 @@
 package io.github.facaiy.c11
 
+import io.github.facaiy.c12.Applicative
 import io.github.facaiy.c6.State
 import io.github.facaiy.c8.Gen
 
 /**
  * Created by facai on 6/6/17.
  */
-trait Monad[F[_]] extends Functor[F] {
+trait Monad[F[_]] extends Applicative[F] {
   def unit[A](a: => A): F[A]
 
   // ex 11.8
   def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = compose((_: Unit) => fa, f)()
 
-  def map[A, B](fa: F[A])(f: A => B): F[B] =
+  override def map[A, B](fa: F[A])(f: A => B): F[B] =
     flatMap(fa)(a => unit(f(a)))
 
-  def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
+  override def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     flatMap(fa)(a => map(fb)(b => f(a, b)))
 
   // ex 11.3
-  def sequence[A](lma: List[F[A]]): F[List[A]] =
+  override def sequence[A](lma: List[F[A]]): F[List[A]] =
     lma.foldRight(unit(List.empty[A]))((x, y) => map2(x, y)(_ :: _))
 
-  def traverse[A, B](la: List[A])(f: A => F[B]): F[List[B]] =
+  override def traverse[A, B](la: List[A])(f: A => F[B]): F[List[B]] =
     sequence(la map f)
 
   // ex 11.4
-  def replicateM[A](n: Int, ma: F[A]): F[List[A]] =
+  override def replicateM[A](n: Int, ma: F[A]): F[List[A]] =
     sequence(List.fill(n)(ma))
   // ex 11.5
   // replicate the element in the data structure.
 
-  def product[A, B](ma: F[A], mb: F[B]): F[(A, B)] = map2(ma, mb)((_, _))
+  override def product[A, B](ma: F[A], mb: F[B]): F[(A, B)] = map2(ma, mb)((_, _))
 
   // ex 11.6
   def filterM[A](ms: List[A])(f: A => F[Boolean]): F[List[A]] = {
