@@ -7,7 +7,7 @@ import io.github.facaiy.c8.Gen
 /**
  * Created by facai on 6/6/17.
  */
-trait Monad[F[_]] extends Applicative[F] {
+trait Monad[F[_]] extends Applicative[F] { self =>
   def unit[A](a: => A): F[A]
 
   // ex 11.8
@@ -44,6 +44,15 @@ trait Monad[F[_]] extends Applicative[F] {
   // ex 11.7
   def compose[A, B, C](f: A => F[B], g: B => F[C]): A => F[C] =
     a => flatMap(f(a))(g)
+
+  // ex 12.11
+  def compose[G[_]](G: Monad[G]) = new Monad[({type f[x] = F[G[x]]})#f] {
+    override def unit[A](a: => A): F[G[A]] = self.unit(G.unit(a))
+
+    override def flatMap[A, B](fa: F[G[A]])(f: (A) => F[G[B]]): F[G[B]] =
+    // F[G[]] cannot be flatten.
+      throw new UnsupportedOperationException()
+  }
 
   // ex 11.9
   /**
@@ -128,4 +137,14 @@ object Monad {
   /**
    * sequence: List[Reader[R, A]] => Reader[R, List[A]], namely, r => List(a, b, ...)
    */
+
+  // ex 12.5
+  def eitherMonad[E] = new Monad[({type f[x] = Either[E, x]})#f] {
+    override def unit[A](a: => A): Either[E, A] = Right(a)
+
+    override def flatMap[A, B](fa: Either[E, A])(f: (A) => Either[E, B]): Either[E, B] = fa match {
+      case Left(e) => Left(e)
+      case Right(x) => f(x)
+    }
+  }
 }
