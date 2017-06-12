@@ -66,6 +66,12 @@ trait Applicative[F[_]] extends Functor[F] { self =>
     override def apply[A, B](fab: F[G[(A) => B]])(fa: F[G[A]]): F[G[B]] =
       self.map2(fab, fa)((gab, ga) => G.apply(gab)(ga))
   }
+
+  // ex 12.12
+  def sequenceMap[K, V](ofa: Map[K, F[V]]): F[Map[K, V]] =
+    ofa.foldLeft(unit(Map[K, V]())){ case (m, (k, v)) =>
+        map2(m, v)((mm, vv) => mm + (k -> vv))
+    }
 }
 
 object Applicative {
@@ -87,5 +93,14 @@ object Applicative {
         case (_, e @ Failure(_, _)) => e
         case (e @ Failure(_, _), _) => e
       }
+  }
+
+  val optionApplitive: Applicative[Option] = new Applicative[Option] {
+    override def apply[A, B](fab: Option[(A) => B])(fa: Option[A]): Option[B] = (fab, fa) match {
+      case (Some(f), Some(a)) => Some(f(a))
+      case (_, _) => None
+    }
+
+    override def unit[A](a: => A): Option[A] = Some(a)
   }
 }

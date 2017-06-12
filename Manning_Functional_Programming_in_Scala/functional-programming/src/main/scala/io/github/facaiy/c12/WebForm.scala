@@ -19,7 +19,7 @@ object WebForm {
       import java.text._
       Success(new SimpleDateFormat("yyyy-MM-dd").parse(birthdate))
     } catch {
-      case _ => Failure("Birthdate must be in the form yyyy-MM-dd.")
+      case _: Throwable => Failure("Birthdate must be in the form yyyy-MM-dd.")
     }
 
   def validPhone(phoneNumber: String): Validation[String, String] =
