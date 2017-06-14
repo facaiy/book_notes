@@ -79,6 +79,21 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] { self =>
     override def traverse[H[_], A, B](fa: F[G[A]])(f: (A) => H[B])(implicit H: Applicative[H]): H[F[G[B]]] =
       self.traverse(fa)(a => G.traverse(a)(f))
   }
+
+  // ex 12.20
+  def composeM[F[_], G[_]](F: Monad[F], G: Monad[G], T: Traverse[G]) =
+    new Monad[({type f[x] = F[G[x]]})#f] {
+      override def unit[A](a: => A): F[G[A]] = F.unit(G.unit(a))
+
+      override def flatMap[A, B](fga: F[G[A]])(f: (A) => F[G[B]]): F[G[B]] = {
+        F.flatMap(fga){ ga =>
+          val gfgb: G[F[G[B]]] = G.map(ga)(a => f(a))
+          val fggb: F[G[G[B]]] = T.sequence(gfgb)(F)
+          val fgb = F.map(fggb)(ggb => G.join(ggb))
+          fgb
+        }
+      }
+    }
 }
 
 object Traverse {
