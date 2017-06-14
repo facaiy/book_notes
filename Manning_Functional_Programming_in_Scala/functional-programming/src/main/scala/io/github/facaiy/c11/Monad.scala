@@ -1,37 +1,38 @@
 package io.github.facaiy.c11
 
+import io.github.facaiy.c12.Applicative
 import io.github.facaiy.c6.State
 import io.github.facaiy.c8.Gen
 
 /**
  * Created by facai on 6/6/17.
  */
-trait Monad[F[_]] extends Functor[F] {
+trait Monad[F[_]] extends Applicative[F] { self =>
   def unit[A](a: => A): F[A]
 
   // ex 11.8
   def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = compose((_: Unit) => fa, f)()
 
-  def map[A, B](fa: F[A])(f: A => B): F[B] =
+  override def map[A, B](fa: F[A])(f: A => B): F[B] =
     flatMap(fa)(a => unit(f(a)))
 
-  def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
+  override def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     flatMap(fa)(a => map(fb)(b => f(a, b)))
 
   // ex 11.3
-  def sequence[A](lma: List[F[A]]): F[List[A]] =
+  override def sequence[A](lma: List[F[A]]): F[List[A]] =
     lma.foldRight(unit(List.empty[A]))((x, y) => map2(x, y)(_ :: _))
 
-  def traverse[A, B](la: List[A])(f: A => F[B]): F[List[B]] =
+  override def traverse[A, B](la: List[A])(f: A => F[B]): F[List[B]] =
     sequence(la map f)
 
   // ex 11.4
-  def replicateM[A](n: Int, ma: F[A]): F[List[A]] =
+  override def replicateM[A](n: Int, ma: F[A]): F[List[A]] =
     sequence(List.fill(n)(ma))
   // ex 11.5
   // replicate the element in the data structure.
 
-  def product[A, B](ma: F[A], mb: F[B]): F[(A, B)] = map2(ma, mb)((_, _))
+  override def product[A, B](ma: F[A], mb: F[B]): F[(A, B)] = map2(ma, mb)((_, _))
 
   // ex 11.6
   def filterM[A](ms: List[A])(f: A => F[Boolean]): F[List[A]] = {
@@ -43,6 +44,15 @@ trait Monad[F[_]] extends Functor[F] {
   // ex 11.7
   def compose[A, B, C](f: A => F[B], g: B => F[C]): A => F[C] =
     a => flatMap(f(a))(g)
+
+  // ex 12.11
+  def compose[G[_]](G: Monad[G]) = new Monad[({type f[x] = F[G[x]]})#f] {
+    override def unit[A](a: => A): F[G[A]] = self.unit(G.unit(a))
+
+    override def flatMap[A, B](fa: F[G[A]])(f: (A) => F[G[B]]): F[G[B]] =
+    // F[G[]] cannot be flatten.
+      throw new UnsupportedOperationException()
+  }
 
   // ex 11.9
   /**
@@ -127,4 +137,14 @@ object Monad {
   /**
    * sequence: List[Reader[R, A]] => Reader[R, List[A]], namely, r => List(a, b, ...)
    */
+
+  // ex 12.5
+  def eitherMonad[E] = new Monad[({type f[x] = Either[E, x]})#f] {
+    override def unit[A](a: => A): Either[E, A] = Right(a)
+
+    override def flatMap[A, B](fa: Either[E, A])(f: (A) => Either[E, B]): Either[E, B] = fa match {
+      case Left(e) => Left(e)
+      case Right(x) => f(x)
+    }
+  }
 }
