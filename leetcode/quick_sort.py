@@ -5,7 +5,9 @@ def quick_sort(array):
     if not array:
         return
 
-    sort(array, 0, len(array)-1)
+    # sort(array, 0, len(array)-1)
+    # return array
+    return sort2(array)
 
 
 def sort(array, start, end):
@@ -28,11 +30,19 @@ def sort(array, start, end):
     return
 
 
+def sort2(array):
+    if not array:
+        return []
+
+    target = array[-1]
+    less = [x for x in array[:-1] if x < target]
+    greater = [x for x in array[:-1] if x >= target]
+    return sort2(less) + [target] + sort2(greater)
+
+
 if __name__ == "__main__":
     array = [1]
-    quick_sort(array)
-    print(array)
+    print(quick_sort(array))
 
     array = [25, 1, 8, 2, 5, 9, 25, 3, 2, 16]
-    quick_sort(array)
-    print(array)
+    print(quick_sort(array))
