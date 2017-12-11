@@ -2,8 +2,8 @@
 
 
 def less(array, target):
-    # return binary_search_recursion(array, target)
-    return less_iterate(array, target)
+    # return less_iterate(array, target)
+    return less_recursion(array, 0, len(array)-1, target)
 
 
 def less_iterate(array, target):
@@ -13,14 +13,24 @@ def less_iterate(array, target):
     low = 0
     high = len(array) - 1
     while low < high:
-        mid = low + (high - low) // 2
+        mid = (low + high) // 2
         # print("before: low: {}, high: {}, mid: {}".format(low, high, mid))
         if array[mid] < target:
             low = mid + 1
         else:
             high = mid - 1
         # print("after: low: {}, high: {}, mid: {}".format(low, high, mid))
-    return high
+    return low
+
+
+def less_recursion(array, low, high, target):
+    if low > high: return low
+
+    mid = (low + high) // 2
+    if array[mid] < target:
+        return less_recursion(array, mid+1, high, target)
+    else:
+        return less_recursion(array, low, mid-1, target)
 
 
 if __name__ == "__main__":

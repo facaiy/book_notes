@@ -6,8 +6,9 @@ def quick_sort(array):
         return
 
     # sort(array, 0, len(array)-1)
-    # return array
-    return sort2(array)
+    sort3(array, 0, len(array)-1)
+    return array
+    # return sort2(array)
 
 
 def sort(array, start, end):
@@ -38,6 +39,25 @@ def sort2(array):
     less = [x for x in array[:-1] if x < target]
     greater = [x for x in array[:-1] if x >= target]
     return sort2(less) + [target] + sort2(greater)
+
+
+def sort3(array, start, end):
+    if start >= end:
+        return
+
+    target = array[end]
+    less, greater = start, end
+    while less < greater:
+        if array[less] >= target:
+            greater -= 1
+            array[less], array[greater] = array[greater], array[less]
+        else:
+            less += 1
+    array[greater], array[end] = array[end], array[greater]
+
+    sort3(array, start, greater-1)
+    sort3(array, greater+1, end)
+    return
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@
 
 
 def greater(array, target):
-    # return binary_search_recursion(array, target)
-    return greater_iterate(array, target)
+    # return greater_iterate(array, target)
+    return greater_recursion(array, 0, len(array)-1, target)
 
 
 def greater_iterate(array, target):
@@ -19,6 +19,16 @@ def greater_iterate(array, target):
         else:
             low = mid + 1
     return low
+
+
+def greater_recursion(array, start, end, target):
+    if start > end: return end
+
+    mid = (start + end) // 2
+    if array[mid] > target:
+        return greater_recursion(array, start, mid-1, target)
+    else:
+        return greater_recursion(array, mid+1, end, target)
 
 
 if __name__ == "__main__":
