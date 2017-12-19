@@ -19,6 +19,12 @@ def find_short(adj_matrix, start_node):
         for (c, r) in zip(*edges):
             edge = adj_matrix.index[int(c)], adj_matrix.index[int(r)]
             relax(edge, adj_matrix, mask)
+
+    for (c, r) in zip(*edges):
+        edge = adj_matrix.index[int(c)], adj_matrix.index[int(r)]
+        if mask[r] > mask[c] + adj_matrix.loc[edge]:
+            raise ValueError("Detect: negative cycle in graph.")
+
     return mask
 
 
