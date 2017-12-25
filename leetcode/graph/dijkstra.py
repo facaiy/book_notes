@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 
 
+import heapq
+
 import numpy as np
 import pandas as pd
 
 
 def find_short(adj_matrix, start_node):
+    # return find_short_by_sort(adj_matrix, start_node)
+    return find_short_by_heap(adj_matrix, start_node)
+
+
+def find_short_by_sort(adj_matrix, start_node):
     nodes = adj_matrix.index
     nodes_distance = pd.DataFrame({"dist": np.ones_like(nodes) * np.inf,
                                    "used": np.zeros_like(nodes)}, index=nodes)
@@ -25,6 +32,30 @@ def find_short(adj_matrix, start_node):
                     nodes_distance.loc[min_node, "dist"] + adj_matrix.loc[min_node, to_node])
 
     return nodes_distance
+
+
+def find_short_by_heap(adj_matrix, start_node):
+    nodes = adj_matrix.index
+    dist = pd.Series(np.ones(adj_matrix.shape[0]) * np.inf,
+                     index=nodes)
+
+    heap = [(0, start_node)]
+    heapq.heapify(heap)
+    used_nodes = set()
+
+    while heap:
+        weight, node = heapq.heappop(heap)
+        if node not in used_nodes:
+            dist[node] = weight
+            used_nodes.add(node)
+
+            for to in nodes:
+                if adj_matrix.loc[node, to] != 0:
+                    n_w = weight + adj_matrix.loc[node, to]
+                    heapq.heappush(heap, (n_w, to))
+
+    # return dist.tolist()
+    return dist
 
 
 def adj_edges2matrix(edges, nodes):
