@@ -19,13 +19,4 @@
 #logger = logging.getLogger()
 
 #from IPython.display import SVG
-"""
-def show_image(filename, figsize=None, res_dir=True):
-    if figsize:
-        plt.figure(figsize=figsize)
-
-    if res_dir:
-        filename = './res/{}'.format(filename)
-
-    plt.imshow(plt.imread(filename))
-"""
+#from IPython.display import Image
