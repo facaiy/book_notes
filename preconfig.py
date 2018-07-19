@@ -16,6 +16,7 @@
 #import itertools
 
 #import logging
+#logging.basicConfig()
 #logger = logging.getLogger()
 
 #from IPython.display import SVG
