@@ -18,6 +18,7 @@
 #import logging
 #logging.basicConfig()
 #logger = logging.getLogger()
+#logger.setLevel(logging.DEBUG)
 
 #from IPython.display import SVG
 #from IPython.display import Image
