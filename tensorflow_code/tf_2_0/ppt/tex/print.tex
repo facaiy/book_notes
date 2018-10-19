@@ -1,0 +1,43 @@
+% -*- coding: utf-8 -*-
+
+\section{tf.print}
+\begin{frame}{主要变动}
+    similar to the standard python print API.\footnote{\href{https://github.com/tensorflow/community/pull/14}{RFC: New tf.print}}
+
+
+    \begin{itemize}
+        \item tf.Print $\to$ tf.print, tf.strings.format
+            \begin{itemize}
+                \item For python 2: \lstinline{from __future__ import print_function}
+            \end{itemize}
+        \item identity op $\to$ control dependencies
+        \item controllable logging levels
+            \begin{itemize}
+                \item stdout/sterr，与notebook不兼容
+                \item device: cpu:0 by default?
+            \end{itemize}
+        \item supports for nested data structures
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \begin{lstlisting}[language=Python,style=myScalastyle, caption=eager mode]
+        tf.enable_eager_execution()
+        tensor = tf.range(10)
+        tf.print(tensor, output_stream=sys.stderr)
+        # (This prints "[0 1 2 ... 7 8 9]" to sys.stderr)
+    \end{lstlisting}
+
+    \begin{lstlisting}[language=Python,style=myScalastyle, caption=graph mode]
+        with sess.as_default():
+          tensor = tf.range(10)
+          print_op = tf.print(tensor, output_stream=sys.stdout)
+          # For tf 1.0: return an identity op:
+          # doubled_tensor = print_op * 2
+          # For tf 2.0:
+          with tf.control_dependencies([print_op]):
+            doubled_tensor = tensor * 2
+          sess.run(doubled_tensor)
+          # (This prints "[0 1 2 ... 7 8 9]" to sys.stdout)
+    \end{lstlisting}
+\end{frame}

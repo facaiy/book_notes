@@ -1,0 +1,43 @@
+\documentclass[%
+    %showsectionnum, %每节开头显示第几节编号
+    %plainthanks, %空白致谢页
+]{banyuan-ppt}
+
+%添加自己要用到的宏包
+%\usepackage{forest}
+\usepackage{caption}
+\captionsetup{font=scriptsize,labelfont=scriptsize}
+
+\let\oldfootnotesize\footnotesize
+\renewcommand*{\footnotesize}{\oldfootnotesize\tiny}
+
+\usepackage[slide,linesnumbered,algoruled]{algorithm2e}
+\DontPrintSemicolon
+%\SetNlSty{\small\rm}
+
+\usepackage{listings}
+
+\usepackage{xcolor}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinestyle{myScalastyle}{
+  frame=tb,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\scriptsize\ttfamily},
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=-5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}

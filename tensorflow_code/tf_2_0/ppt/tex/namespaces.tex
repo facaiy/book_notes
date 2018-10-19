@@ -1,0 +1,22 @@
+% -*- coding: utf-8 -*-
+
+\section{namespaces}
+
+\begin{frame}{namespaces}
+    structure namespaces in a clear way for easier discoverability and usability.\footnote{\href{https://github.com/tensorflow/community/pull/16}{RFC: TensorFlow API symbols and namespaces}}
+
+    \begin{itemize}
+        \item \lstinline{tf_export} decorator
+        \item additional namespaces
+            \begin{itemize}
+                \item tf.losses $\to$ tf.keras.losses
+                \item tf.metrics $\to$ tf.keras.metrics
+                \item tf.layers $\to$ tf.keras.layers
+            \end{itemize}
+        \item deprecated namespaces
+            \begin{itemize}
+                \item tf.logging
+                \item tf.manip
+            \end{itemize}
+    \end{itemize}
+\end{frame}
