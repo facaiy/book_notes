@@ -1,6 +1,43 @@
 % -*- coding: utf-8 -*-
 
-\section{collections}
+\subsection{collections}
 
 \begin{frame}
+    主要用法：
+    \begin{description}
+        \item[搜索汇总]  用户自行收集和追踪
+            \begin{itemize}
+                \item queue runner $\to$ tf.data
+                \item variable $\to$ 利用variable creator在创建时追踪
+                \item update op $\to$ 在model\_fn里更新，或者用keras的model.updates
+            \end{itemize}
+        \item[序列化]    SaveModel，后续会有专门API支持
+        \item[维持状态]  SharedEmbeddingColumns，使用全局变量替代
+    \end{description}
+\end{frame}
+
+\begin{frame}[fragile]
+    \begin{minted}[fontsize=\scriptsize,
+                   mathescape,
+                   linenos,
+                   autogobble,
+                   numbersep=5pt,
+                   frame=leftline,
+                   framesep=2mm]{python}
+        class VariableTracker(object):
+          def __init__(self):
+            self.variables = []
+
+          def variable_tracker(self, next_creator, **kwargs):
+            v = next_creator(**kwargs)
+            self.variables.append(v)
+            return v
+
+        with tf.variable_creator_scope(tracker.variable_tracker):
+          # ...
+          a = tf.Variable(0)
+          # ...
+
+        assert tracker.variables == [a]
+    \end{minted}
 \end{frame}

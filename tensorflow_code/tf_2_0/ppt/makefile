@@ -4,7 +4,7 @@ TEX_DIR = tex
 PRESET = preset
 
 # Option for latexmk
-LATEXMK_OPT = -xelatex -gg -silent -f
+LATEXMK_OPT = -xelatex -gg -silent -f --shell-escape
 
 .PHONY : all clean preset
 
