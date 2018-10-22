@@ -8,9 +8,7 @@
 *.swp
 *~
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
+# Byte-compiled / optimized / DLL files __pycache__/ *.py[cod]
 
 # C extensions
 *.so
@@ -77,6 +75,7 @@ target/
 *.snm
 *.toc
 *.vrb
+_minted-main/
 
 # spark sql
 metastore_db
