@@ -3,30 +3,20 @@
 \subsection{tf.Variable}
 
 \begin{frame}[fragile]{tf.Variable}
-    \begin{listing}
-        \begin{minted}[fontsize=\scriptsize,
-                       mathescape,
-                       linenos,
-                       autogobble,
-                       numbersep=5pt,
-                       frame=leftline,
-                       framesep=2mm,
-                       breaklines]{python}
-            a = tf.Variable(1.0, use_resource=True)
-            a.initializer.run()
+    \begin{tcblisting}{title=RefVariable的读写顺序问题}
+        a = tf.Variable(1.0, use_resource=True)
+        a.initializer.run()
 
-            assign = a.assign(2.0)
-            with tf.control_dependencies([assign]):
-              b = a.read_value()
-            with tf.control_dependencies([b]):
-              other_assign = a.assign(3.0)
-            with tf.control_dependencies([other_assign]):
-              # Will print 2.0 because the value was read before other_assign ran. If
-              # `a` was a tf.Variable instead, 2.0 or 3.0 could be printed.
-              tf.Print(b, [b]).eval()
-        \end{minted}
-        \caption{RefVariable的读写顺序问题}
-    \end{listing}
+        assign = a.assign(2.0)
+        with tf.control_dependencies([assign]):
+          b = a.read_value()
+        with tf.control_dependencies([b]):
+          other_assign = a.assign(3.0)
+        with tf.control_dependencies([other_assign]):
+          # Will print 2.0 because the value was read before other_assign ran. If
+          # `a` was a tf.Variable instead, 2.0 or 3.0 could be printed.
+          tf.Print(b, [b]).eval()
+    \end{tcblisting}
 \end{frame}
 
 \begin{frame}{主要变动}
@@ -41,49 +31,31 @@
 \end{frame}
 
 \begin{frame}[fragile]
-    \begin{listing}[H]
-        \begin{minted}[fontsize=\scriptsize,
-                       mathescape,
-                       linenos,
-                       autogobble,
-                       numbersep=5pt,
-                       frame=leftline,
-                       framesep=2mm,
-                       breaklines]{python}
-            def custome_creator(next_creator, **kwargs):
-              return next_creator(**kwargs)
+    \begin{tcblisting}{title=tf.Variable and scoped factory function}
+        def custome_creator(next_creator, **kwargs):
+          return next_creator(**kwargs)
 
-            # 封装到variable_scope.variable_createor_scope:
-            with (ops.get_default_graph()
-                     ._variable_creator_scope(custom_creator)):
-              # 封装进tf.Variable:
-              previous_getter = lambda **kwargs: default_variable_creator(None, **kwargs)
-              for getter in ops.get_default_graph()._variable_creator_stack:
-                previous_getter = _make_getter(getter, previous_getter),
+        # 封装到variable_scope.variable_createor_scope:
+        with (ops.get_default_graph()
+                 ._variable_creator_scope(custom_creator)):
+          # 封装进tf.Variable:
+          previous_getter = lambda **kwargs: default_variable_creator(None, **kwargs)
+          for getter in ops.get_default_graph()._variable_creator_stack:
+            previous_getter = _make_getter(getter, previous_getter),
 
-              return previous_getter(**kwargs)
+          return previous_getter(**kwargs)
 
-            # tf 2.0:
-            with variable_scope.variable_creator_scope(custom_creator):
-              a = tf.Variable(**kwargs)
-        \end{minted}
-        \caption{tf.Variable and scoped factory function}
-    \end{listing}
+        # tf 2.0:
+        with variable_scope.variable_creator_scope(custom_creator):
+          a = tf.Variable(**kwargs)
+    \end{tcblisting}
 \end{frame}
 
 % TODO: 画个示意图
 
 % 简单的metaclass介绍
 \begin{frame}[fragile]
-    \begin{listing}[H]
-        \begin{minted}[fontsize=\scriptsize,
-                       mathescape,
-                       linenos,
-                       autogobble,
-                       numbersep=5pt,
-                       frame=leftline,
-                       framesep=2mm,
-                       breaklines]{python}
+    \begin{tcblisting}{title=code snippe of tf 2.0 Variable}
             class VariableMetaclass(type):
               def _variable_v1_call(cls, **kwargs):
                 pass
@@ -104,7 +76,5 @@
                                    checkpointable.CheckpointableBase)):
               def __init__(self, **kwargs):
                 raise NotImplementedError
-        \end{minted}
-        \caption{code snippe of tf 2.0 Variable}
-    \end{listing}
+    \end{tcblisting}
 \end{frame}

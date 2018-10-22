@@ -15,31 +15,25 @@
 \DontPrintSemicolon
 %\SetNlSty{\small\rm}
 
-% \usepackage{listings}
-
 \usepackage{xcolor}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 
-%\lstdefinestyle{myScalastyle}{
-%  frame=leftline,
-%  aboveskip=3mm,
-%  belowskip=3mm,
-%  showstringspaces=false,
-%  columns=flexible,
-%  basicstyle={\scriptsize\ttfamily},
-%  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
-%  numbersep=5pt,                   % how far the line-numbers are from the code
-%  numberstyle=\tiny\color{gray},
-%  keywordstyle=\color{blue},
-%  commentstyle=\color{dkgreen},
-%  stringstyle=\color{mauve},
-%  breaklines=true,
-%  breakatwhitespace=true,
-%  tabsize=2,
-%}
-
-\usepackage{minted}
+\usepackage[listings]{tcolorbox}
+\tcbuselibrary{minted}
+\tcbset{fonttitle=\scriptsize,
+        listing engine=minted,
+        colback=black!80,
+        colframe=red!75!black,
+        listing only,
+        minted style=monokai,
+        minted language=python,
+        minted options={fontsize=\tiny,
+                        tabsize=2,
+                        linenos,
+                        autogobble,
+                        numbersep=5pt,
+                        framesep=2mm}}
 \renewcommand{\theFancyVerbLine}{\sffamily \color{gray}{\tiny \oldstylenums{\arabic{FancyVerbLine}}}}

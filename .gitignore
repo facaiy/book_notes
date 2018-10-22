@@ -79,3 +79,6 @@ _minted-main/
 
 # spark sql
 metastore_db
+
+# python
+__pycache__/
