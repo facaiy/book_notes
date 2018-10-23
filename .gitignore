@@ -75,6 +75,7 @@ target/
 *.snm
 *.toc
 *.vrb
+*.xdv
 _minted-main/
 
 # spark sql
