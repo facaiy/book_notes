@@ -31,11 +31,29 @@
 \end{frame}
 
 \begin{frame}[fragile]
+    \begin{tcblisting}{}
+        custom_creator(next, **kwargs)        <---- scope
+                        |
+                    creator(next, **kwargs)
+                             |
+                             |
+                          ... ...
+                             |
+                             |
+                         default_creator(None, **kwargs)
+                                     |
+                                     |
+                             RefVariable(**kwargs), or
+                             ResourceVariable(**kwargs)
+    \end{tcblisting}
+\end{frame}
+
+\begin{frame}[fragile]
     \begin{tcblisting}{title=tf.Variable and scoped factory function}
         def custome_creator(next_creator, **kwargs):
           return next_creator(**kwargs)
 
-        # 封装到variable_scope.variable_createor_scope:
+        # 封装到variable_scope.variable_creator_scope:
         with (ops.get_default_graph()
                  ._variable_creator_scope(custom_creator)):
           # 封装进tf.Variable:
@@ -51,30 +69,38 @@
     \end{tcblisting}
 \end{frame}
 
-% TODO: 画个示意图
+\begin{frame}
+    \begin{figure}[!tb]
+        \includegraphics[width=0.7\onepicwidth]{figure/var/instance-creation}
+        \caption{The diagram of how instances are constructed.\footnote{
+                 \href{https://blog.ionelmc.ro/2015/02/09/understanding-python-metaclasses/}{Understanding Python metaclasses}}}
+    \end{figure}
+\end{frame}
 
-% 简单的metaclass介绍
 \begin{frame}[fragile]
     \begin{tcblisting}{title=code snippe of tf 2.0 Variable}
             class VariableMetaclass(type):
               def _variable_v1_call(cls, **kwargs):
                 pass
+
               def _variable_v2_call(cls, **kwargs):
                 pass
+
               def __call__(cls, *args, **kwargs):
                 if cls is VariableV1:
                   return cls._variable_v1_call(*args, **kwargs)
                 elif cls is Variable:
                   return cls._variable_v2_call(*args, **kwargs)
                 else:
-                  return super(VariableMetaclass, cls).__call__(*args,
-                                                                **kwargs)
+                  return super(VariableMetaclass, cls).__call__(*args, **kwargs)
 
             @tf_export("Variable", v1=[])
-            class Variable(
-                six.with_metaclass(VariableMetaclass,
-                                   checkpointable.CheckpointableBase)):
+            class Variable(six.with_metaclass(VariableMetaclass,
+                                              checkpointable.CheckpointableBase)):
               def __init__(self, **kwargs):
                 raise NotImplementedError
     \end{tcblisting}
+    {\tiny \tt
+    source: tensorflow/python/ops/variables.py \\[-2ex]
+    commit: 4a5693e732b80a593bca7bf94ddd5df9e5d78cc0}
 \end{frame}

@@ -2,5 +2,109 @@
 
 \subsection{tf.functions}
 
-\begin{frame}
+\begin{frame}{tf.functions}
+    make TensorFlow be more "Pythonic" in 2.0.\footnote{\href{https://github.com/tensorflow/community/pull/20}{TensorFlow 2.0: Functions, not Sessions}}
+
+    \begin{itemize}
+        \item graph + session $\to$ function
+        \item 状态一致: python object与tf runtime
+        \item easy to export: GraphDef + Checkpoint and / or SaveModel
+        \item Enable eager execution by default
+        \item 兼容1.x代码: tf.compat.v1.wrap\_function
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \begin{tcblisting}{}
+        import tensorflow as tf
+
+        @tf.function
+        def compute_z0(x, y):
+          return tf.add(x, y)
+
+        @tf.function
+        def compute_z1(x):
+          return compute_z1(x, tf.square(x))
+
+        z0 = compute_z0(2., 3.)
+        # 5.
+        z1 = compute_z1(2.)
+        # 6.
+    \end{tcblisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    For W, b, and c, the lifetime of the Python objects and the runtime state are tied together.
+
+    \begin{tcblisting}{}
+        W = tf.Variable(
+            tf.glorot_uniform_initializer()((10, 10)))
+        b = tf.Variable(tf.zeros(10))
+        c = tf.Variable(0)
+
+        @tf.function
+        def f(x):
+          c.assign_add(1)
+          return tf.matmul(x, W) + b
+
+        print(f(make_input_value())
+        assert int(c) == 1
+    \end{tcblisting}
+
+    \begin{itemize}
+        \item state are only created the first time the function f is called.
+        \item variable referenced by the function still exists when called.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    Automatically insert control dependencies to ensure stateful operations follow graph construction order.\footnote{\href{https://github.com/tensorflow/tensorflow/blob/8c072a519e2beed483adb361a9be934a47bee366/tensorflow/python/framework/auto_control_deps.py\#L31}{AutomaticControlDependencies}}
+
+    \begin{tcblisting}{}
+        a = tf.Variable(1.0)
+        b = tf.Variable(1.0)
+        @tf.function
+        def f():
+          a.assign(2.0)
+          b.assign(3.0)
+          return a + b
+        print(f())
+    \end{tcblisting}
+
+    Note: avoid only observable differences from program order.
+\end{frame}
+
+\begin{frame}[fragile]{Trace Caches}
+    Every time functioin is invoked in the Python program, a trace\_cache\_key is computed.\footnote{\href{https://github.com/tensorflow/tensorflow/blob/8c072a519e2beed483adb361a9be934a47bee366/tensorflow/python/eager/function.py\#L884}{PolymorphicFunction.\_maybe\_define\_function}}
+
+    \begin{tcblisting}{}
+        @tf.function
+        def f(x):
+          return tf.square(x)
+
+        f(tf.constant(1, dtype=tf.int32))
+        f(tf.constant(1.0, dtype=tf.float32))
+        f(2.0)  # use tf.constant instead.
+        f(3.0)
+
+        # 1. Input Signatures:
+        @tf.function(input_signature=((tf.float32, [None]))
+        def f(x):
+          return tf.add(x, 1.)
+        # 2. GC + weak reference.
+        # 3. warning if ratio of calls is too greater.
+    \end{tcblisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \begin{tcblisting}{title=member function of a class}
+        class ScalarModel(object):
+          def __init__(self):
+            self.v = tf.Variable(0)
+
+          @tf.function
+          def increment(self, amount):
+            self.v.assign_add(amount)
+    \end{tcblisting}
 \end{frame}
