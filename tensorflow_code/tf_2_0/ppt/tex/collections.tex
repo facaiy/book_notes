@@ -2,10 +2,11 @@
 
 \subsection{collections}
 
-\begin{frame}
-    主要用法：
+\begin{frame}{collections}
+    we have situations where we might build multiple models in a graph, and functions cause further issues because functions are graphs of their own.\footnote{\href{https://github.com/tensorflow/community/pull/17}{RFC: Deprecate Collections}}
+
     \begin{description}
-        \item[搜索汇总]  用户自行收集和追踪
+        \item[收集汇总]  用户自行收集和追踪
             \begin{itemize}
                 \item queue runner $\to$ tf.data
                 \item variable $\to$ 利用variable creator在创建时追踪

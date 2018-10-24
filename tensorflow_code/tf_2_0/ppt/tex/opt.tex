@@ -1,0 +1,32 @@
+% -*- coding: utf-8 -*-
+
+\subsection{Optimizer}
+
+\begin{frame}{Optimizer unification}
+    \begin{itemize}
+        \item extending the TensorFlow Optimizer API\footnote{\href{https://github.com/tensorflow/community/pull/24}{RFC: Optimizer unification in TensorFlow 2.0}}
+            \begin{itemize}
+                \item based on the existing tf.contrib.optimizer\_v2 optimizers
+                \item serializable: *\_config, *\_weights
+                \item modifiable hyperparameters: optimizer.learning\_rate = 0.2
+                \item gradient clipping: get\_gradients, *\_updates
+            \end{itemize}
+        \item disable reusing a single optimizer instance across multiple graphs.
+        \item use\_locking argument is removed: internal implementation details.
+        \item should not require positional arguments.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+	The set of new optimizers would be (same signatures, same objects, no wrappers):
+    \begin{enumerate}
+    	\item SGD (both GradientDescentOptimizer and MomentumOptimizer)
+    	\item Adadelta
+    	\item Adagrad
+    	\item Adam
+    	\item FTRL (not yet in Keras)
+    	\item RMSProp
+    	\item Adamax (not yet in TF)
+    	\item Nadam (not yet in TF)
+    \end{enumerate}
+\end{frame}

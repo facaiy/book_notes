@@ -1,21 +1,9 @@
 % -*- coding: utf-8 -*-
 
-\subsection{tf.functions}
-
-\begin{frame}{tf.functions}
-    make TensorFlow be more "Pythonic" in 2.0.\footnote{\href{https://github.com/tensorflow/community/pull/20}{TensorFlow 2.0: Functions, not Sessions}}
-
-    \begin{itemize}
-        \item graph + session $\to$ function
-        \item 状态一致: python object与tf runtime
-        \item easy to export: GraphDef + Checkpoint and / or SaveModel
-        \item Enable eager execution by default
-        \item 兼容1.x代码: tf.compat.v1.wrap\_function
-    \end{itemize}
-\end{frame}
+\subsection{tf.function}
 
 \begin{frame}[fragile]
-    \begin{tcblisting}{}
+    \begin{tcblisting}{title=tf.function示例}
         import tensorflow as tf
 
         @tf.function
@@ -24,13 +12,27 @@
 
         @tf.function
         def compute_z1(x):
-          return compute_z1(x, tf.square(x))
+          return compute_z0(x, tf.square(x))
 
         z0 = compute_z0(2., 3.)
         # 5.
         z1 = compute_z1(2.)
         # 6.
     \end{tcblisting}
+\end{frame}
+
+\begin{frame}[fragile]{tf.function}
+    make TensorFlow be more "Pythonic" in 2.0.\footnote{\href{https://github.com/tensorflow/community/pull/20}{TensorFlow 2.0: Functions, not Sessions}}
+
+    \begin{itemize}
+        \item graph + session $\to$ function
+        \item 状态一致: python object与tf runtime
+        \item easy to export: GraphDef + Checkpoint and / or SaveModel
+        \item enable eager execution by default
+        \item 兼容1.x代码: tf.compat.v1.wrap\_function
+    \end{itemize}
+
+    主要问题：现有图优化技术可能受影响？
 \end{frame}
 
 \begin{frame}[fragile]
@@ -63,11 +65,13 @@
     \begin{tcblisting}{}
         a = tf.Variable(1.0)
         b = tf.Variable(1.0)
+
         @tf.function
         def f():
           a.assign(2.0)
           b.assign(3.0)
           return a + b
+
         print(f())
     \end{tcblisting}
 
@@ -77,6 +81,8 @@
 \begin{frame}[fragile]{Trace Caches}
     Every time functioin is invoked in the Python program, a trace\_cache\_key is computed.\footnote{\href{https://github.com/tensorflow/tensorflow/blob/8c072a519e2beed483adb361a9be934a47bee366/tensorflow/python/eager/function.py\#L884}{PolymorphicFunction.\_maybe\_define\_function}}
 
+    % PEP 373
+    % https://python3statement.org/
     \begin{tcblisting}{}
         @tf.function
         def f(x):
@@ -96,15 +102,99 @@
     \end{tcblisting}
 \end{frame}
 
-
-\begin{frame}[fragile]
+\begin{frame}[fragile]{潜在的用法}
     \begin{tcblisting}{title=member function of a class}
         class ScalarModel(object):
+
           def __init__(self):
             self.v = tf.Variable(0)
 
           @tf.function
           def increment(self, amount):
             self.v.assign_add(amount)
+    \end{tcblisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    示例一：\footnote{\href{https://github.com/tensorflow/tensorflow/blob/60c56a4103e9f9239b9b7b104a846619dc4ecc20/tensorflow/python/keras/layers/core.py\#L845}{tensorflow/python/keras/layers/core.py}}
+
+    \begin{tcblisting}{}
+        class Dense(Layer):
+          """Just your regular densely-connected NN layer."""
+
+          def build(self, input_shape):
+            self.kernel = self.add_weight(
+                'kernel',
+                shape=[input_shape[-1].value, self.units],
+                initializer=self.kernel_initializer,
+                regularizer=self.kernel_regularizer,
+                constraint=self.kernel_constraint,
+                dtype=self.dtype,
+                trainable=True)
+            self.built = True
+
+          def call(self, inputs):
+            outputs = gen_math_ops.mat_mul(inputs, self.kernel)
+            if self.use_bias:
+              outputs = nn.bias_add(outputs, self.bias)
+            if self.activation is not None:
+              return self.activation(outputs)
+            return outputs
+    \end{tcblisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    示例二：\footnote{\href{https://github.com/tensorflow/tensorflow/blob/60c56a4103e9f9239b9b7b104a846619dc4ecc20/tensorflow/python/keras/engine/training.py\#L54}{tensorflow/python/keras/engine/training.py}}
+
+    \begin{tcblisting}{}
+        class Model(Network):
+          """Model groups layers into an object with training and inference features."""
+
+          def _make_train_function(self):
+            # ... ...
+            self.train_function = K.function(
+                inputs, [self.total_loss] + self.metrics_tensors,
+                updates=updates,
+                name='train_function',
+                **self._function_kwargs)
+
+          def _make_test_function(self):
+             # ... ...
+             self.test_function = K.function(
+                 inputs, [self.total_loss] + self.metrics_tensors,
+                 updates=self.state_updates + self.metrics_updates,
+                 name='test_function',
+                 **self._function_kwargs)
+
+          def _make_predict_function(self):
+            # ... ...
+            pass
+    \end{tcblisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    示例三：\footnote{\href{https://github.com/tensorflow/estimator/blob/1c73cff04a2af22a12d778a525038261879482e4/tensorflow\_estimator/python/estimator/estimator.py\#L76}{tensorflow\_estimator/python/estimator/estimator.py}}
+
+    \begin{tcblisting}{}
+        class Estimator(object):
+          """Estimator class to train and evaluate TensorFlow models."""
+
+          def _train_model_default(self, input_fn, hooks, saving_listeners):
+            pass
+
+          def _train_model_distributed(self, input_fn, hooks, saving_listeners)
+            pass
+
+          def _call_model_fn_eval(self, input_fn, config):
+            pass
+
+          def _call_model_fn_eval_distributed(self, input_fn, config):
+            pass
+
+          def predict(self, **kwargs):
+            pass
+
+          def _add_meta_graph_for_mode(self, **kwargs):
+            pass
     \end{tcblisting}
 \end{frame}
