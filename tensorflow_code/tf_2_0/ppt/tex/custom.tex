@@ -1,0 +1,39 @@
+\documentclass[%
+    %showsectionnum, %每节开头显示第几节编号
+    %plainthanks, %空白致谢页
+]{banyuan-ppt}
+
+%添加自己要用到的宏包
+%\usepackage{forest}
+\usepackage{caption}
+\captionsetup{font=scriptsize,labelfont=scriptsize}
+
+\let\oldfootnotesize\footnotesize
+\renewcommand*{\footnotesize}{\oldfootnotesize\tiny}
+
+\usepackage[slide,linesnumbered,algoruled]{algorithm2e}
+\DontPrintSemicolon
+%\SetNlSty{\small\rm}
+
+\usepackage{xcolor}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\usepackage[listings]{tcolorbox}
+\tcbuselibrary{minted}
+\tcbset{fonttitle=\scriptsize,
+        listing engine=minted,
+        colback=black!80,
+        colframe=red!75!black,
+        listing only,
+        minted style=monokai,
+        minted language=python,
+        minted options={fontsize=\tiny,
+                        tabsize=2,
+                        linenos,
+                        autogobble,
+                        numbersep=5pt,
+                        framesep=2mm}}
+\renewcommand{\theFancyVerbLine}{\sffamily \color{gray}{\tiny \oldstylenums{\arabic{FancyVerbLine}}}}

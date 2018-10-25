@@ -1,0 +1,15 @@
+            class VariableTracker(object):
+              def __init__(self):
+                self.variables = []
+
+              def variable_tracker(self, next_creator, **kwargs):
+                v = next_creator(**kwargs)
+                self.variables.append(v)
+                return v
+
+            with tf.variable_creator_scope(tracker.variable_tracker):
+              # ...
+              a = tf.Variable(0)
+              # ...
+            assert tracker.variables == [a]
+    

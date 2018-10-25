@@ -1,0 +1,19 @@
+% -*- coding: utf-8 -*-
+
+\subsection{tf.contrib}
+
+\begin{frame}{tf.contrib}
+    sunset the present tf.contrib, and replace its important functions with more maintainable alternatives.\footnote{\href{https://github.com/tensorflow/community/pull/18}{RFC: Sunset tf.contrib}}
+
+    \begin{itemize}
+        \item moving to core: symbols should be prefixed with experimental.
+        \item moving to a seperate repository
+            \begin{itemize}
+                \item tensorflow/addons: layer, metric, loss, optimizer, op or kernel
+                \item tensorflow/IO
+                \item tensorflow/network
+                \item tensorflow/scientific
+            \end{itemize}
+        \item deleting
+    \end{itemize}
+\end{frame}

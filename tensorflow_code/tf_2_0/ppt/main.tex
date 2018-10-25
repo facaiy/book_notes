@@ -1,0 +1,31 @@
+% -*- coding: utf-8 -*-
+
+% 配置宏包和订制环境
+\include{tex/custom}
+
+% 文首
+\begin{document}
+
+% 封面
+\include{tex/id}
+\createtitle
+
+\begin{frame}
+    \begin{figure}[!tb]
+        \includegraphics[width=\onepicwidth]{figure/water}
+        \caption{我们不生产水，我们只做大自然的搬运工\footnote{
+                 \href{http://sh.qihoo.com/pc/967ac7a2370f8fc79?sign=360_e39369d1}{图片来源：快资讯}}}
+    \end{figure}
+\end{frame}
+
+% 目录
+\createoutline
+
+% 正文
+\input{tex/content}
+
+% 封底
+\createlastpage
+
+\end{document}
+% 文末

@@ -1,0 +1,48 @@
+% -*- coding: utf-8 -*-
+
+\subsection{用户层面}
+
+\begin{frame}[fragile]
+    \begin{tcblisting}{title=用户代码示例}
+        data = np.random.random((1000, 32))
+        labels = np.random.random((1000, 10))
+
+        # Instantiates a toy dataset instance:
+        dataset = tf.data.Dataset.from_tensor_slices((data, labels))
+        dataset = dataset.batch(32)
+        dataset = dataset.repeat()
+
+        # Create a trivial model
+        model = keras.Sequential([
+            keras.layers.Dense(10, input_shape=(32,)),
+            keras.layers.Dense(10, activation='softmax')
+        ])
+        model.compile(optimizer='rmsprop',
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy'])
+
+        # Don't forget to specify `steps_per_epoch` when calling `fit` on a dataset.
+        model.fit(dataset, epochs=10, steps_per_epoch=30)
+
+        # Save entire model to a HDF5 file
+        model.save('my_model.h5')
+
+        # Recreate the exact same model, including weights and optimizer.
+        model = keras.models.load_model('my_model.h5')
+    \end{tcblisting}
+\end{frame}
+
+\begin{frame}{用户层面}
+    \begin{itemize}
+        \item eager execution
+        \item tf.data (tensorflow/datasets)
+        \item tf.keras (tensorflow/models)
+        \item estimator(model\_fn + Head) and feature column \\
+              (tensorflow/estimator)
+        \item 多语言化
+            \begin{itemize}
+                \item tensorflow/docs
+                \item core/api
+            \end{itemize}
+    \end{itemize}
+\end{frame}
